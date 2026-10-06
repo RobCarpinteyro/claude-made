@@ -39,11 +39,17 @@ button small{display:block;font-size:11px;color:#6f8188;font-weight:700;margin-t
 #pv .pt{font-size:15px;font-weight:700;color:#cfe;margin:8px 4px 2px;line-height:1.3;max-height:2.6em;overflow:hidden}
 #pv .cur{font-size:12px;color:#6f8188;margin:0 4px;font-weight:700}
 #pv.end img{opacity:.25}
+.scr{display:grid;grid-template-columns:1fr 2.2fr;gap:10px;margin-top:10px}
+.scr button{height:84px;background:#1d1c08;border-color:#5c5714;color:#f3ef9a;font-size:22px}
+.scr button:active{background:#3a380f}
+.scr button.sent{background:#e8e038;color:#071722}
+.scr button small{color:#b7b26a}
 </style></head><body>
 <div id="gate"><h1>Acordeón</h1><p id="gp">Primero carga el audio completo (≈10 MB). Después ya no depende de la señal.</p><div id="pct" style="font-size:64px;font-weight:900;color:#51c4ca;font-variant-numeric:tabular-nums;display:none">0%</div><div id="mb" style="font-size:14px;color:#7d8f96;display:none"></div><button id="load">Cargar acordeón</button><button id="go" style="display:none">Activar</button><div id="msg"></div></div>
 <div class="top"><span id="conn"><span class="dot"></span>Buscando laptop…</span><span id="sala" style="color:#3e4f55"></span><span class="mode" id="mode">Sigue la laptop</span></div>
 <div id="pv"><div class="ph"><span>Sigue · <b id="pvn">–</b></span><span id="pvc"></span></div><img id="pvi" alt=""><div class="pt" id="pvt"></div></div>
 <div id="zone"><span class="hint">toca = siguiente tramo</span><div class="now">Tramo <span id="idx">–</span></div><div id="label">—</div><div id="next"></div><div id="time"></div><div class="bar"><i id="prog"></i></div></div>
+<div class="scr"><button id="sprev">◀<small>pantalla</small></button><button id="snext">Avanzar ▶<small>pantalla principal</small></button></div>
 <div class="row"><button id="b10">−10<small>seg</small></button><button id="pp">▶︎</button><button id="f10">+10<small>seg</small></button></div>
 <div class="row"><button id="prev">⏮<small>anterior</small></button><button id="rep">↺<small>repetir</small></button><button id="nxt">⏭<small>siguiente</small></button></div>
 <script>
@@ -68,6 +74,8 @@ A.addEventListener('play',function(){$('pp').textContent='❚❚';$('pp').classL
 A.addEventListener('pause',function(){$('pp').textContent='▶︎';$('pp').classList.remove('playing');});
 function segAt(t){for(var i=segs.length-1;i>=0;i--)if(t>=segs[i].start-0.01)return i;return 0;}
 function seek(d){var t=Math.max(0,Math.min((dur||A.duration||0),A.currentTime+d));cur=segAt(t);A.currentTime=t;stopAt=segs[cur]?segs[cur].end:null;if(A.paused)A.play().catch(function(){});show();}
+var lastTap=0;function scr(k,btn){var n=Date.now();if(n-lastTap<350)return;lastTap=n;if(!SALA){$('conn').innerHTML='<span class="dot"></span>Sin sala · escanea el QR (tecla C)';return;}fetch('https://ntfy.sh/polar-pretextos-'+SALA,{method:'POST',body:JSON.stringify({t:'cmd',k:k,id:Math.random().toString(36).slice(2)})}).catch(function(){});btn.classList.add('sent');setTimeout(function(){btn.classList.remove('sent');},250);}
+$('snext').onclick=function(){scr('next',this);};$('sprev').onclick=function(){scr('prev',this);};
 $('zone').onclick=function(){play(cur+1);};
 $('nxt').onclick=function(){play(cur+1);};
 $('prev').onclick=function(){play(Math.max(0,cur-1));};
