@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes"><meta name="theme-color" content="#000">
+<title>Acordeón</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none}
+html,body{height:100%;background:#000;color:#e9f3f6;font-family:-apple-system,system-ui,sans-serif;overflow:hidden;touch-action:manipulation}
+body{display:flex;flex-direction:column;padding:max(14px,env(safe-area-inset-top)) 14px max(14px,env(safe-area-inset-bottom))}
+.top{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;font-weight:700;color:#7d8f96}
+.dot{display:inline-block;width:10px;height:10px;border-radius:50%;background:#ff3b5c;margin-right:8px;vertical-align:-1px}
+.dot.on{background:#3ce3c3}
+.mode{border:1.5px solid #2a3a40;border-radius:999px;padding:7px 12px;color:#cfe;background:#0b1316;font-weight:800;font-size:12px}
+.mode.off{color:#ffb020;border-color:#5a4210}
+#zone{flex:1;display:flex;flex-direction:column;justify-content:center;align-items:flex-start;padding:10px 6px;margin:12px 0;border-radius:22px;background:#06090a;border:1.5px solid #12191c;position:relative}
+#zone:active{background:#0b1316}
+.now{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#51c4ca;font-weight:800}
+#label{font-size:34px;line-height:1.1;font-weight:800;margin-top:8px}
+#next{font-size:15px;color:#6f8188;margin-top:10px;font-weight:600}
+.bar{position:absolute;left:16px;right:16px;bottom:16px;height:6px;border-radius:4px;background:#12191c;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,#51c4ca,#ec0f8f)}
+.hint{position:absolute;right:16px;top:14px;font-size:12px;color:#3e4f55;font-weight:700}
+#time{font-size:14px;color:#6f8188;font-variant-numeric:tabular-nums;margin-top:14px;font-weight:700}
+.row{display:grid;grid-template-columns:1fr 1.25fr 1fr;gap:10px;margin-top:10px}
+button{font:inherit;border:0;border-radius:18px;background:#0e1518;color:#e9f3f6;height:72px;font-size:20px;font-weight:800;border:1.5px solid #1b262a}
+button:active{background:#18252a}
+button small{display:block;font-size:11px;color:#6f8188;font-weight:700;margin-top:2px}
+#pp{background:#0f2a2d;border-color:#22585c;font-size:28px}
+#pp.playing{background:#2b0f21;border-color:#6c1e4e}
+#gate{position:fixed;inset:0;background:#000;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;z-index:9;text-align:center;padding:30px}
+#gate button{width:100%;max-width:340px;height:90px;font-size:24px;background:#0f2a2d;border-color:#51c4ca}
+#gate p{color:#7d8f96;font-size:15px;line-height:1.45;max-width:340px}
+#gate h1{font-size:22px}
+#msg{min-height:18px;font-size:13px;color:#ffb020}
+</style></head><body>
+<div id="gate"><h1>Acordeón</h1><p id="gp">Primero carga el audio completo (≈10 MB). Después ya no depende de la señal.</p><div id="pct" style="font-size:64px;font-weight:900;color:#51c4ca;font-variant-numeric:tabular-nums;display:none">0%</div><div id="mb" style="font-size:14px;color:#7d8f96;display:none"></div><button id="load">Cargar acordeón</button><button id="go" style="display:none">Activar</button><div id="msg"></div></div>
+<div class="top"><span id="conn"><span class="dot"></span>Buscando laptop…</span><span id="sala" style="color:#3e4f55"></span><span class="mode" id="mode">Sigue la laptop</span></div>
+<div id="zone"><span class="hint">toca = siguiente tramo</span><div class="now">Tramo <span id="idx">–</span></div><div id="label">—</div><div id="next"></div><div id="time"></div><div class="bar"><i id="prog"></i></div></div>
+<div class="row"><button id="b10">−10<small>seg</small></button><button id="pp">▶︎</button><button id="f10">+10<small>seg</small></button></div>
+<div class="row"><button id="prev">⏮<small>anterior</small></button><button id="rep">↺<small>repetir</small></button><button id="nxt">⏭<small>siguiente</small></button></div>
+<script>
+(function(){
+var A=new Audio();A.preload='auto';A.playsInline=true;
+var segs=[],cur=-1,stopAt=null,auto=true,wl=null,last={slide:-1,step:-1},dur=0;
+var $=function(i){return document.getElementById(i);};
+function fmt(t){t=Math.max(0,t||0);var m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+(s<10?'0':'')+s;}
+function build(marks){marks=(marks||[]).slice().sort(function(a,b){return a.t-b.t;});segs=marks.map(function(m,i){return {start:m.t,end:i+1<marks.length?marks[i+1].t:(dur||1e9),slide:m.slide,step:m.step||0,label:m.label||('Lámina '+(m.slide+1))};});}
+function show(){var s=segs[cur];$('idx').textContent=cur>=0?(cur+1)+' de '+segs.length:'–';$('label').textContent=s?s.label:'Listo';$('next').textContent=segs[cur+1]?'Sigue: '+segs[cur+1].label:'';}
+function play(i){if(i<0||i>=segs.length)return;cur=i;var s=segs[i];A.currentTime=s.start;stopAt=s.end;A.play().catch(function(){});show();}
+function pause(){A.pause();}
+A.addEventListener('timeupdate',function(){var s=segs[cur];if(stopAt!=null&&A.currentTime>=stopAt-0.05){A.pause();A.currentTime=stopAt;stopAt=null;}
+  if(s){var p=(A.currentTime-s.start)/Math.max(.1,s.end-s.start);$('prog').style.width=Math.max(0,Math.min(1,p))*100+'%';$('time').textContent=fmt(A.currentTime-s.start)+' / '+fmt(s.end-s.start);}});
+A.addEventListener('play',function(){$('pp').textContent='❚❚';$('pp').classList.add('playing');});
+A.addEventListener('pause',function(){$('pp').textContent='▶︎';$('pp').classList.remove('playing');});
+function segAt(t){for(var i=segs.length-1;i>=0;i--)if(t>=segs[i].start-0.01)return i;return 0;}
+function seek(d){var t=Math.max(0,Math.min((dur||A.duration||0),A.currentTime+d));cur=segAt(t);A.currentTime=t;stopAt=segs[cur]?segs[cur].end:null;if(A.paused)A.play().catch(function(){});show();}
+$('zone').onclick=function(){play(cur+1);};
+$('nxt').onclick=function(){play(cur+1);};
+$('prev').onclick=function(){play(Math.max(0,cur-1));};
+$('rep').onclick=function(){play(Math.max(0,cur));};
+$('pp').onclick=function(){if(A.paused){if(cur<0)play(0);else{if(stopAt==null&&segs[cur])stopAt=segs[cur].end;A.play().catch(function(){});}}else pause();};
+$('b10').onclick=function(){seek(-10);};$('f10').onclick=function(){seek(10);};
+$('mode').onclick=function(){auto=!auto;this.textContent=auto?'Sigue la laptop':'Manual';this.classList.toggle('off',!auto);};
+function onState(st){if(!auto)return;if(st.slide===last.slide&&st.step===last.step)return;var slideChanged=st.slide!==last.slide;last={slide:st.slide,step:st.step};
+  var i=-1;for(var k=0;k<segs.length;k++){if(segs[k].slide===st.slide&&segs[k].step===st.step){i=k;break;}}
+  if(i<0&&slideChanged){for(k=0;k<segs.length;k++){if(segs[k].slide===st.slide){i=k;break;}}}
+  if(i>=0&&i!==cur)play(i);}
+var SALA=(location.search.match(/sala=([a-z0-9]+)/i)||[])[1]||'';var gotDeck=false;
+function connect(){if(!SALA){$('conn').innerHTML='<span class="dot"></span>Sin sala · escanea el QR de la presentación (tecla C)';return;}
+  $('sala').textContent='sala '+SALA;var T='https://ntfy.sh/polar-pretextos-'+SALA;
+  try{var es=new EventSource(T+'/sse');
+  es.onopen=function(){$('conn').innerHTML='<span class="dot'+(gotDeck?' on':'')+'"></span>'+(gotDeck?'Laptop conectada':'En línea · esperando la laptop');fetch(T,{method:'POST',body:JSON.stringify({t:'phone',hello:true})}).catch(function(){});};
+  es.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.event&&d.event!=='message')return;var m=JSON.parse(d.message);if(m.t!=='deck')return;if(!gotDeck){gotDeck=true;$('conn').innerHTML='<span class="dot on"></span>Laptop conectada';}onState({slide:m.slide,step:m.step||0});}catch(x){}};
+  es.onerror=function(){$('conn').innerHTML='<span class="dot"></span>Sin señal · usa los botones';};}catch(x){}
+  setInterval(function(){fetch(T,{method:'POST',body:JSON.stringify({t:'phone'})}).catch(function(){});},120000);}
+function wake(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').then(function(l){wl=l;}).catch(function(){});}}
+connect();
+document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')wake();});
+var audioBlob=null,marksData=null;
+$('load').onclick=function(){var b=this;b.disabled=true;b.textContent='Cargando…';$('pct').style.display='block';$('mb').style.display='block';$('msg').textContent='';
+  fetch('marks.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(m){marksData=m;return fetch('acordeon.m4a');}).then(function(r){
+    if(!r.ok)throw 0;var total=+r.headers.get('Content-Length')||9803633,got=0,chunks=[],rd=r.body&&r.body.getReader?r.body.getReader():null;
+    if(!rd)return r.blob();
+    function pump(){return rd.read().then(function(x){if(x.done)return new Blob(chunks,{type:'audio/mp4'});chunks.push(x.value);got+=x.value.length;var p=Math.min(100,Math.floor(got/total*100));$('pct').textContent=p+'%';$('mb').textContent=(got/1e6).toFixed(1)+' de '+(total/1e6).toFixed(1)+' MB';return pump();});}
+    return pump();}).then(function(blob){audioBlob=blob;$('pct').textContent='100%';$('gp').textContent='Listo. Conecta tus Ray-Ban, sube el volumen y toca Activar.';b.style.display='none';$('go').style.display='block';})
+  .catch(function(){b.disabled=false;b.textContent='Reintentar';$('msg').textContent='No se pudo descargar. Revisa la señal del iPhone.';});};
+$('go').onclick=function(){A.src=URL.createObjectURL(audioBlob);dur=marksData.duration||0;build(marksData.marks);
+  A.play().then(function(){A.pause();A.currentTime=0;}).catch(function(){});wake();show();$('gate').style.display='none';last={slide:-1,step:-1};if(SALA)fetch('https://ntfy.sh/polar-pretextos-'+SALA,{method:'POST',body:JSON.stringify({t:'phone',hello:true})}).catch(function(){});};
+})();
+</script></body></html>
