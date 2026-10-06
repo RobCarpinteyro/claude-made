@@ -32,9 +32,17 @@ button small{display:block;font-size:11px;color:#6f8188;font-weight:700;margin-t
 #gate p{color:#7d8f96;font-size:15px;line-height:1.45;max-width:340px}
 #gate h1{font-size:22px}
 #msg{min-height:18px;font-size:13px;color:#ffb020}
+#pv{margin-top:12px;border-radius:18px;background:#06090a;border:1.5px solid #12191c;padding:10px;display:none}
+#pv .ph{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#7d8f96;margin:2px 4px 8px}
+#pv .ph b{color:#e8e038}
+#pv img{display:block;width:100%;aspect-ratio:16/9;border-radius:10px;background:#0b1316;object-fit:cover}
+#pv .pt{font-size:15px;font-weight:700;color:#cfe;margin:8px 4px 2px;line-height:1.3;max-height:2.6em;overflow:hidden}
+#pv .cur{font-size:12px;color:#6f8188;margin:0 4px;font-weight:700}
+#pv.end img{opacity:.25}
 </style></head><body>
 <div id="gate"><h1>Acordeón</h1><p id="gp">Primero carga el audio completo (≈10 MB). Después ya no depende de la señal.</p><div id="pct" style="font-size:64px;font-weight:900;color:#51c4ca;font-variant-numeric:tabular-nums;display:none">0%</div><div id="mb" style="font-size:14px;color:#7d8f96;display:none"></div><button id="load">Cargar acordeón</button><button id="go" style="display:none">Activar</button><div id="msg"></div></div>
 <div class="top"><span id="conn"><span class="dot"></span>Buscando laptop…</span><span id="sala" style="color:#3e4f55"></span><span class="mode" id="mode">Sigue la laptop</span></div>
+<div id="pv"><div class="ph"><span>Sigue · <b id="pvn">–</b></span><span id="pvc"></span></div><img id="pvi" alt=""><div class="pt" id="pvt"></div></div>
 <div id="zone"><span class="hint">toca = siguiente tramo</span><div class="now">Tramo <span id="idx">–</span></div><div id="label">—</div><div id="next"></div><div id="time"></div><div class="bar"><i id="prog"></i></div></div>
 <div class="row"><button id="b10">−10<small>seg</small></button><button id="pp">▶︎</button><button id="f10">+10<small>seg</small></button></div>
 <div class="row"><button id="prev">⏮<small>anterior</small></button><button id="rep">↺<small>repetir</small></button><button id="nxt">⏭<small>siguiente</small></button></div>
@@ -43,10 +51,16 @@ button small{display:block;font-size:11px;color:#6f8188;font-weight:700;margin-t
 var A=new Audio();A.preload='auto';A.playsInline=true;
 var segs=[],cur=-1,stopAt=null,auto=true,wl=null,last={slide:-1,step:-1},dur=0;
 var $=function(i){return document.getElementById(i);};
+var PV={info:[{"title": "Portada Expo FAC"}, {"title": "Arranque: las cinco frases"}, {"title": "Título y presentación"}, {"title": "Dos titulares de 2026"}, {"title": "Tesis: 30 personas"}, {"title": "Zambullida: el iceberg"}, {"title": "Corpus"}, {"title": "Criterio"}, {"title": "Control"}, {"title": "Pretexto 1: farmacéuticas grandes"}, {"title": "FormulationDE"}, {"title": "Lilly TuneLab"}, {"title": "Aprendizaje federado"}, {"title": "Brightseed"}, {"title": "Pretexto 2: la regulación"}, {"title": "El regulador ya la usa"}, {"title": "Merck y McKinsey"}, {"title": "Purolea"}, {"title": "Pretexto 3: el médico"}, {"title": "40 millones al día"}, {"title": "Agente de voz (Polar)"}, {"title": "VAR de la evidencia (Polar)"}, {"title": "Pretexto 4: fuerza de ventas"}, {"title": "Deloitte: 2/3 del día"}, {"title": "Hub de ciclo (Polar)"}, {"title": "Simulador de médico (Polar)"}, {"title": "Pretexto 5: la marca"}, {"title": "Monitor ChatGPT (Polar)"}, {"title": "Cofepris: 31,155 anuncios"}, {"title": "Validador de creativos (Polar)"}, {"title": "El mostrador: WhatsApp"}, {"title": "Último pretexto: por dónde empezar"}, {"title": "Tres preguntas"}, {"title": "Acción para el lunes"}, {"title": "Cierre"}, {"title": "Fuentes"}],urls:[],cur:-1};
+function pvShow(s){if(s==null||s<0)return;PV.cur=s;var n=s+1,el=$('pv');el.style.display='block';var tot=PV.info.length;
+  $('pvc').textContent='ahora '+(s+1)+' / '+tot;
+  if(n>=tot){el.classList.add('end');$('pvn').textContent='fin';$('pvt').textContent='Última lámina';$('pvi').removeAttribute('src');return;}
+  el.classList.remove('end');$('pvn').textContent=(n+1)+' / '+tot;$('pvt').textContent=PV.info[n].title||'';if(PV.urls[n])$('pvi').src=PV.urls[n];}
+
 function fmt(t){t=Math.max(0,t||0);var m=Math.floor(t/60),s=Math.floor(t%60);return m+':'+(s<10?'0':'')+s;}
 function build(marks){marks=(marks||[]).slice().sort(function(a,b){return a.t-b.t;});segs=marks.map(function(m,i){return {start:m.t,end:i+1<marks.length?marks[i+1].t:(dur||1e9),slide:m.slide,step:m.step||0,label:m.label||('Lámina '+(m.slide+1))};});}
 function show(){var s=segs[cur];$('idx').textContent=cur>=0?(cur+1)+' de '+segs.length:'–';$('label').textContent=s?s.label:'Listo';$('next').textContent=segs[cur+1]?'Sigue: '+segs[cur+1].label:'';}
-function play(i){if(i<0||i>=segs.length)return;cur=i;var s=segs[i];A.currentTime=s.start;stopAt=s.end;A.play().catch(function(){});show();}
+function play(i){if(i<0||i>=segs.length)return;cur=i;var s=segs[i];if(!PV.deck)pvShow(s.slide);A.currentTime=s.start;stopAt=s.end;A.play().catch(function(){});show();}
 function pause(){A.pause();}
 A.addEventListener('timeupdate',function(){var s=segs[cur];if(stopAt!=null&&A.currentTime>=stopAt-0.05){A.pause();A.currentTime=stopAt;stopAt=null;}
   if(s){var p=(A.currentTime-s.start)/Math.max(.1,s.end-s.start);$('prog').style.width=Math.max(0,Math.min(1,p))*100+'%';$('time').textContent=fmt(A.currentTime-s.start)+' / '+fmt(s.end-s.start);}});
@@ -70,19 +84,22 @@ function connect(){if(!SALA){$('conn').innerHTML='<span class="dot"></span>Sin s
   $('sala').textContent='sala '+SALA;var T='https://ntfy.sh/polar-pretextos-'+SALA;
   try{var es=new EventSource(T+'/sse');
   es.onopen=function(){$('conn').innerHTML='<span class="dot'+(gotDeck?' on':'')+'"></span>'+(gotDeck?'Laptop conectada':'En línea · esperando la laptop');fetch(T,{method:'POST',body:JSON.stringify({t:'phone',hello:true})}).catch(function(){});};
-  es.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.event&&d.event!=='message')return;var m=JSON.parse(d.message);if(m.t!=='deck')return;if(!gotDeck){gotDeck=true;$('conn').innerHTML='<span class="dot on"></span>Laptop conectada';}onState({slide:m.slide,step:m.step||0});}catch(x){}};
+  es.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.event&&d.event!=='message')return;var m=JSON.parse(d.message);if(m.t!=='deck')return;if(!gotDeck){gotDeck=true;$('conn').innerHTML='<span class="dot on"></span>Laptop conectada';}PV.deck=true;pvShow(m.slide);onState({slide:m.slide,step:m.step||0});}catch(x){}};
   es.onerror=function(){$('conn').innerHTML='<span class="dot"></span>Sin señal · usa los botones';};}catch(x){}
   setInterval(function(){fetch(T,{method:'POST',body:JSON.stringify({t:'phone'})}).catch(function(){});},120000);}
 function wake(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').then(function(l){wl=l;}).catch(function(){});}}
 connect();
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')wake();});
 var audioBlob=null,marksData=null;
+function loadThumbs(){var n=PV.info.length,done=0;$('mb').textContent='Imágenes de las láminas 0 de '+n;
+  var jobs=PV.info.map(function(_,i){var f='thumbs/'+(i<10?'0':'')+i+'.webp';return fetch(f).then(function(r){return r.blob();}).then(function(b){PV.urls[i]=URL.createObjectURL(b);}).catch(function(){}).then(function(){done++;$('mb').textContent='Imágenes de las láminas '+done+' de '+n;});});
+  return Promise.all(jobs);}
 $('load').onclick=function(){var b=this;b.disabled=true;b.textContent='Cargando…';$('pct').style.display='block';$('mb').style.display='block';$('msg').textContent='';
   fetch('marks.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(m){marksData=m;return fetch('acordeon.m4a');}).then(function(r){
     if(!r.ok)throw 0;var total=+r.headers.get('Content-Length')||9803633,got=0,chunks=[],rd=r.body&&r.body.getReader?r.body.getReader():null;
     if(!rd)return r.blob();
     function pump(){return rd.read().then(function(x){if(x.done)return new Blob(chunks,{type:'audio/mp4'});chunks.push(x.value);got+=x.value.length;var p=Math.min(100,Math.floor(got/total*100));$('pct').textContent=p+'%';$('mb').textContent=(got/1e6).toFixed(1)+' de '+(total/1e6).toFixed(1)+' MB';return pump();});}
-    return pump();}).then(function(blob){audioBlob=blob;$('pct').textContent='100%';$('gp').textContent='Listo. Conecta tus Ray-Ban, sube el volumen y toca Activar.';b.style.display='none';$('go').style.display='block';})
+    return pump();}).then(function(blob){audioBlob=blob;return loadThumbs();}).then(function(){var blob=audioBlob;$('pct').textContent='100%';$('gp').textContent='Listo. Conecta tus Ray-Ban, sube el volumen y toca Activar.';b.style.display='none';$('go').style.display='block';})
   .catch(function(){b.disabled=false;b.textContent='Reintentar';$('msg').textContent='No se pudo descargar. Revisa la señal del iPhone.';});};
 $('go').onclick=function(){A.src=URL.createObjectURL(audioBlob);dur=marksData.duration||0;build(marksData.marks);
   A.play().then(function(){A.pause();A.currentTime=0;}).catch(function(){});wake();show();$('gate').style.display='none';last={slide:-1,step:-1};if(SALA)fetch('https://ntfy.sh/polar-pretextos-'+SALA,{method:'POST',body:JSON.stringify({t:'phone',hello:true})}).catch(function(){});};
