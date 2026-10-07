@@ -89,12 +89,13 @@ function onState(st){if(!auto)return;if(st.slide===last.slide&&st.step===last.st
   if(i>=0&&i!==cur)play(i);}
 var SALA=(location.search.match(/sala=([a-z0-9]+)/i)||[])[1]||'';var gotDeck=false;
 function connect(){if(!SALA){$('conn').innerHTML='<span class="dot"></span>Sin sala · escanea el QR de la presentación (tecla C)';return;}
-  $('sala').textContent='sala '+SALA;var T='https://ntfy.sh/polar-pretextos-'+SALA;
+  $('sala').textContent='sala '+SALA;$('sala').style.color='#7d8f96';var T='https://ntfy.sh/polar-pretextos-'+SALA;
   try{var es=new EventSource(T+'/sse');
   es.onopen=function(){$('conn').innerHTML='<span class="dot'+(gotDeck?' on':'')+'"></span>'+(gotDeck?'Laptop conectada':'En línea · esperando la laptop');fetch(T,{method:'POST',body:JSON.stringify({t:'phone',hello:true})}).catch(function(){});};
   es.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.event&&d.event!=='message')return;var m=JSON.parse(d.message);if(m.t!=='deck')return;if(!gotDeck){gotDeck=true;$('conn').innerHTML='<span class="dot on"></span>Laptop conectada';}PV.deck=true;pvShow(m.slide);onState({slide:m.slide,step:m.step||0});}catch(x){}};
   es.onerror=function(){$('conn').innerHTML='<span class="dot"></span>Sin señal · usa los botones';};}catch(x){}
-  setInterval(function(){fetch(T,{method:'POST',body:JSON.stringify({t:'phone'})}).catch(function(){});},120000);}
+  setInterval(function(){fetch(T,{method:'POST',body:JSON.stringify({t:'phone'})}).catch(function(){});},120000);
+  var tries=0,hi=setInterval(function(){if(gotDeck||tries>40){clearInterval(hi);return;}tries++;fetch(T,{method:'POST',body:JSON.stringify({t:'phone',hello:true})}).then(function(r){if(r.status===429)$('conn').innerHTML='<span class="dot"></span>Canal saturado · espera un minuto';}).catch(function(){});},6000);}
 function wake(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').then(function(l){wl=l;}).catch(function(){});}}
 connect();
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')wake();});
