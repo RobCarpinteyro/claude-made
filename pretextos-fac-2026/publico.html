@@ -1,0 +1,52 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Se acabaron los pretextos</title>
+<meta name="description" content="Roberto Carpinteyro · Polar Multimedia · Expo FAC / Pharma Summit 2026">
+<style>
+@font-face{font-family:'Manrope';font-weight:200 800;src:url(a/f/manrope.woff2) format('woff2')}
+:root{--bg:#071722;--c:#51c4ca;--m:#ff5db5;--y:#e8e038;--s:#c9dce3}
+*{box-sizing:border-box}html,body{margin:0;height:100%;background:var(--bg);color:#fff;font-family:'Manrope',system-ui,sans-serif}
+body{display:flex;align-items:center;justify-content:center;background:radial-gradient(1200px 700px at 70% 20%,rgba(81,196,202,.16),transparent 60%),radial-gradient(900px 600px at 10% 90%,rgba(255,93,181,.12),transparent 60%),var(--bg)}
+.w{width:min(760px,100%);padding:40px 24px;text-align:center}
+.ey{font-size:13px;letter-spacing:.2em;text-transform:uppercase;color:var(--c);font-weight:800}
+h1{font-size:clamp(40px,7vw,68px);line-height:1.02;margin:14px 0 10px;font-weight:800;letter-spacing:-.02em}h1 span{color:var(--m)}
+.by{color:var(--s);font-weight:600;font-size:17px;margin-bottom:44px}
+.n{font-size:clamp(70px,14vw,128px);font-weight:800;color:var(--c);font-variant-numeric:tabular-nums;line-height:1;display:none}
+.d{color:var(--s);font-weight:700;font-size:16px;margin-top:10px;min-height:22px;font-variant-numeric:tabular-nums}
+.bar{height:8px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden;margin:22px auto 0;max-width:520px;display:none}.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--c),var(--m));transition:width .2s}
+button,a.b{display:inline-block;font:800 20px 'Manrope',sans-serif;border:0;border-radius:16px;padding:20px 34px;margin:26px 8px 0;cursor:pointer;text-decoration:none}
+#go{background:var(--c);color:#071722}#enter{background:var(--y);color:#071722;display:none}
+a.sec{background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.3);font-size:16px;padding:14px 22px}
+.tip{color:rgba(201,220,227,.7);font-size:14px;margin-top:34px;line-height:1.6;font-weight:600}
+.tip b{color:#fff}
+</style></head><body><div class="w">
+<div class="ey">Expo FAC · Pharma Summit 2026</div>
+<h1>Se acabaron <span>los pretextos.</span></h1>
+<div class="by">Roberto Carpinteyro · Polar Multimedia</div>
+<div class="n" id="n">0%</div><div class="bar" id="bar"><i id="bi"></i></div><div class="d" id="d"></div>
+<button id="go">Cargar presentación</button><button id="enter">Entrar a la presentación</button>
+
+<p class="tip">Carga todo antes de empezar: imágenes, animaciones y tipografías se guardan en este navegador y la presentación ya no depende de la señal.<br>Dentro: <b>→</b> avanza · <b>F</b> pantalla completa · <b>P</b> notas · <b>G</b> índice</p>
+</div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i);},M=null,CN=null;
+var swReady=('serviceWorker' in navigator)?navigator.serviceWorker.register('sw.js').then(function(){return navigator.serviceWorker.ready;}).catch(function(){return null;}):Promise.resolve(null);
+function mb(b){return (b/1e6).toFixed(1);}
+fetch('assets-publico.json',{cache:'no-store'}).then(function(r){return r.json();}).then(function(m){M=m;CN='pretextos-'+m.v;
+  if(!('caches' in window))return;
+  caches.keys().then(function(ks){ks.forEach(function(k){if(k.indexOf('pretextos-')===0&&k!==CN)caches.delete(k);});});
+  return caches.open(CN).then(function(c){return c.keys();}).then(function(ks){if(ks.length>=M.files.length){$('d').textContent='Ya está cargada en este navegador ('+M.files.length+' archivos · '+mb(M.bytes)+' MB).';$('go').textContent='Volver a cargar';$('enter').style.display='inline-block';}});
+}).catch(function(){$('d').textContent='Sin conexión: si ya la cargaste antes, entra directo.';$('enter').style.display='inline-block';});
+$('go').onclick=function(){if(!M)return;var b=this;b.disabled=true;b.style.opacity=.5;$('n').style.display='block';$('bar').style.display='block';
+  var done=0,bytes=0,q=M.files.slice(),fails=0,cache=null;
+  function upd(){var p=Math.floor(bytes/M.bytes*100);$('n').textContent=p+'%';$('bi').style.width=p+'%';$('d').textContent=done+' de '+M.files.length+' archivos · '+mb(bytes)+' de '+mb(M.bytes)+' MB';}
+  function one(){var f=q.shift();if(!f)return Promise.resolve();
+    return fetch(f+'?v='+M.v,{cache:'reload'}).then(function(r){if(!r.ok)throw 0;return cache?cache.put(f,r.clone()).then(function(){return r.blob();}):r.blob();})
+      .then(function(){done++;bytes+=M.sizes[f]||0;upd();},function(){fails++;}).then(one);}
+  (('caches' in window)?caches.open(CN):Promise.resolve(null)).then(function(c){cache=c;upd();var w=[];for(var i=0;i<6;i++)w.push(one());return Promise.all(w);})
+  .then(function(){return swReady;}).then(function(){
+    if(fails){$('d').textContent='Faltaron '+fails+' archivos. Revisa la señal y vuelve a cargar.';b.disabled=false;b.style.opacity=1;b.textContent='Reintentar';return;}
+    $('n').textContent='100%';$('d').textContent='Listo: '+M.files.length+' archivos · '+mb(M.bytes)+' MB guardados.';b.style.display='none';$('enter').style.display='inline-block';});};
+$('enter').onclick=function(){location.href='deck-publico.html';};
+})();
+</script></body></html>
