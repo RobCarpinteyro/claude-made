@@ -23,6 +23,8 @@ main{display:grid;grid-template-columns:minmax(300px,430px) 1fr;gap:28px;padding
 .btn{border:0;border-radius:999px;padding:16px 28px;font:800 17px Manrope;cursor:pointer}
 .btn.p{background:var(--c);color:#071722}.btn.e{background:rgba(7,23,34,.85);color:#fff;border:1.5px solid rgba(255,255,255,.35)}
 .btn:disabled{opacity:.5}
+.btn.muted{background:#ff5d6c;color:#fff;border-color:#ff5d6c}
+.stage.muted .badge i{background:#ff5d6c}
 .panel{display:flex;flex-direction:column;gap:16px;min-width:0}
 .intro{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px}
 .intro h2{margin:0 0 8px;font-size:22px}.intro p{margin:0;color:var(--s);line-height:1.55;font-size:16px}
@@ -48,7 +50,7 @@ main{display:grid;grid-template-columns:minmax(300px,430px) 1fr;gap:28px;padding
 <main>
   <div><div class="stage" id="stage"><video id="vL" poster="poster.jpg" autoplay loop muted playsinline><source src="listens.webm" type="video/webm"><source src="listens.mp4" type="video/mp4"></video><video id="vS" autoplay loop muted playsinline><source src="speaks.webm" type="video/webm"><source src="speaks.mp4" type="video/mp4"></video>
     <div class="badge"><i></i><span id="st">Lista</span></div>
-    <div class="ctl"><button class="btn p" id="start">Hablar con Clara</button><button class="btn e" id="stop" style="display:none">Terminar</button></div>
+    <div class="ctl"><button class="btn p" id="start">Hablar con Clara</button><button class="btn e" id="mute" style="display:none;margin-right:10px">🎙 Silenciar</button><button class="btn e" id="stop" style="display:none">Terminar</button></div>
     <div class="name">Dra. Clara Laguardia<small>Inmunología bacteriana e infecciones respiratorias</small></div></div></div>
   <div class="panel">
     <div class="intro" id="intro"><h2>Pregúntele como a una colega.</h2><p>Clara conversa en voz y, cuando la pregunta es científica, busca en los estudios aprobados de Bacmune (MV130) y muestra aquí la evidencia con su fuente. Si un dato no está en los estudios, lo dice.</p>
@@ -67,7 +69,7 @@ var API=(window.CLARA_API||'').replace(/\/$/,'');
 var LINKS={"1":"1YSOJ97nAvCyJQ3LP80xASSfxwsS9Gc68","2":"1IhGqQmmt1kkRi9Tx1stCrlD3kOJRKWmI","3":"1b4yMiFlqNZQR--_1JTA-EM16vZO2A5LP","4":"1cEIO8lxE6yPMOID-6ZSa71HhbgGRUi-8","5":"1MoES-nleaDLytL_Scd4XWr_nw6DkzdBV","6":"1StjeOWHH22jjWaUaHx5xRT2IQKCKIvdp","7":"1MAORQqvhgCPo_pWXLghDi-WQQ_O8SbSM","8":"1UVlLDyAU0iz_fIHw1k2jqhk252hoioPt","9":"1sP7o3hlPlKvkAf1hcINUGKYImwwX7-CE","10":"1uJUNjk2L0K0ilDxW5hi2oSUYQBIOldRd","11":"1QLBdzOc7EHDWfg1shBvU0BF_WQRT1U9I","12":"1uR0QXk1CgrMCz08EQKxnCqEoItMu5_na","13":"17OwybwoadK3iXyyHnE2kWD2Qu491H334","14":"1G4_yEWuWXS7mQE_3Ro5YDne6_DbOS6ME","15":"1LJqU_uSvM1VYRg_V_ktpy88FjNXYdn_-","16":"15jxESyciyLi6pALLZt1PqhitU7Kzl-4O","17":"1ZQj3RE-oU17mKjCkCs5jYstjxWgWWRZ3","18":"1arb6YcxnX7DB0hPHr_oBEzZ2XnFv_Yjr","19":"1Z2R45Ar0iF-DKnDWAIknReENvCEcJh1q","R":"1LyDPXrBoNEkMlxWwtjOW05wbczQp0wmA"};
 function linkFor(fn){fn=fn||'';var m=fn.match(/^\s*(\d+)/);var k=m?String(+m[1]):(/resumen/i.test(fn)?'R':null);return k&&LINKS[k]?'https://drive.google.com/file/d/'+LINKS[k]+'/view':null;}
 function prettyName(fn){return (fn||'Documento').replace(/\.pdf$/i,'').replace(/_compressed/i,'').replace(/^\s*\d+\s*[-.]\s*/,'').replace(/\s+/g,' ').trim();}
-var PROMPT='Eres la Dra. Clara Laguardia, asesora científica en inmunología bacteriana, microbiota e infecciones respiratorias. Conversas con médicos tratantes en congresos y entornos clínicos, de colega a colega: español neutro, tono profesional, cálido y sereno.\n\nCómo respondes:\n- 2 a 5 frases, claras y con fundamento.\n- Toda afirmación clínica (eficacia, cifras, poblaciones, mecanismo, seguridad, edades) la tomas EXCLUSIVAMENTE del resultado de la herramienta search_corpus. Nunca de memoria. Antes de responder cualquier pregunta científica o clínica, llama a search_corpus.\n- Si search_corpus devuelve evidencia: responde con ella, menciona brevemente de qué estudio sale (autor y año) y cierra con "Los resultados a detalle aparecen aquí en pantalla."\n- Si no devuelve evidencia: di "No tengo evidencia sobre eso en mis estudios. ¿Lo planteamos de otra forma?" Nunca inventes ni completes.\n- Si preguntan por otro producto o tema fuera de tus estudios: dilo con amabilidad ("eso está fuera de mi alcance") y ofrece lo que sí cubres.\n- Saludos y charla casual: responde breve y natural, sin buscar.\n- No des dosis ni esquemas personalizados. No digas "consulte a su médico". No compares contra otros productos ni nombres a la competencia.\n\nAl iniciar, saluda en una frase y ofrece ayuda con la evidencia de Bacmune.\nTranscripción: interpreta "vacmun", "bacmiun", "bacmun", "vacmune" o "bacmune" como Bacmune (MV130).';
+var PROMPT='ACENTO Y FORMA DE HABLAR (muy importante): eres mexicana. Hablas español de México con acento mexicano neutro, como una médica de la Ciudad de México en un congreso. Usa "usted" o "tú", NUNCA "vos" ni voseo; nada de entonación ni modismos rioplatenses o argentinos (no digas "che", "bárbaro", "dale"). Pronuncia la "ll" y la "y" como en México.\n\nEres la Dra. Clara Laguardia, asesora científica en inmunología bacteriana, microbiota e infecciones respiratorias. Conversas con médicos tratantes en congresos y entornos clínicos, de colega a colega: tono profesional, cálido y sereno.\n\nCómo respondes:\n- 2 a 5 frases, claras y con fundamento.\n- Toda afirmación clínica (eficacia, cifras, poblaciones, mecanismo, seguridad, edades) la tomas EXCLUSIVAMENTE del resultado de la herramienta search_corpus. Nunca de memoria. Antes de responder cualquier pregunta científica o clínica, llama a search_corpus.\n- Si search_corpus devuelve evidencia: responde con ella, menciona brevemente de qué estudio sale (autor y año) y cierra con "Los resultados a detalle aparecen aquí en pantalla."\n- Si no devuelve evidencia: di "No tengo evidencia sobre eso en mis estudios. ¿Lo planteamos de otra forma?" Nunca inventes ni completes.\n- Si preguntan por otro producto o tema fuera de tus estudios: dilo con amabilidad ("eso está fuera de mi alcance") y ofrece lo que sí cubres.\n- Saludos y charla casual: responde breve y natural, sin buscar.\n- No des dosis ni esquemas personalizados. No digas "consulte a su médico". No compares contra otros productos ni nombres a la competencia.\n\nAl iniciar, saluda en una frase y ofrece ayuda con la evidencia de Bacmune.\nTranscripción: interpreta "vacmun", "bacmiun", "bacmun", "vacmune" o "bacmune" como Bacmune (MV130).';
 
 var pc=null,dc=null,stream=null,audioEl=null,live=false,lastUser='';
 function setState(s,cls){$('st').textContent=s;var st=$('stage');st.classList.remove('thinking');if(cls)st.classList.add(cls);}
@@ -85,7 +87,7 @@ async function onEvent(e){var d;try{d=JSON.parse(e.data);}catch(x){return;}var t
   if(t==='conversation.item.input_audio_transcription.completed'){lastUser=d.transcript||'';txLine('Médico',lastUser);}
   else if(t==='response.output_audio_transcript.done'||t==='response.audio_transcript.done')txLine('Clara',d.transcript);
   else if(t==='output_audio_buffer.started'||t==='response.output_audio_transcript.delta'||t==='response.audio_transcript.delta'){speaking(true);setState('Hablando');}
-  else if(t==='output_audio_buffer.stopped'||t==='output_audio_buffer.cleared'){speaking(false);setState('Escuchando');}
+  else if(t==='output_audio_buffer.stopped'||t==='output_audio_buffer.cleared'){speaking(false);setState(muted?'Micrófono apagado':'Escuchando');}
   else if(t==='response.function_call_arguments.done'&&d.name==='search_corpus'){
     var args={};try{args=JSON.parse(d.arguments||'{}');}catch(x){}var q=args.query||lastUser;setState('Buscando en los estudios…','thinking');
     var res;try{var r=await fetch(API+'/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});res=await r.json();if(!r.ok)throw new Error((res.error&&res.error.message)||r.status);}
@@ -110,14 +112,17 @@ $('start').onclick=async function(){
     var ans=await fetch('https://api.openai.com/v1/realtime/calls?model=gpt-realtime',{method:'POST',body:offer.sdp,headers:{'Authorization':'Bearer '+ek,'Content-Type':'application/sdp'}});
     if(!ans.ok)throw new Error('No se pudo abrir la llamada ('+ans.status+')');
     await pc.setRemoteDescription({type:'answer',sdp:await ans.text()});
-    live=true;$('stage').classList.add('live');setState('Escuchando');$('start').style.display='none';$('stop').style.display='inline-block';
+    live=true;$('stage').classList.add('live');setState('Escuchando');$('start').style.display='none';$('stop').style.display='inline-block';$('mute').style.display='inline-block';setMute(false);
   }catch(err){stop();$('msg').textContent='No se pudo iniciar: '+err.message;}
   this.disabled=false;
 };
 function stop(){live=false;speaking(false);$('stage').classList.remove('live','thinking');setState('Lista');
   try{dc&&dc.close();}catch(e){}try{pc&&pc.close();}catch(e){}if(stream)stream.getTracks().forEach(function(t){t.stop();});pc=dc=stream=null;
-  $('start').style.display='inline-block';$('stop').style.display='none';}
+  $('start').style.display='inline-block';$('stop').style.display='none';$('mute').style.display='none';}
 $('stop').onclick=stop;
+var muted=false;
+function setMute(m){muted=m;if(stream)stream.getAudioTracks().forEach(function(t){t.enabled=!m;});var b=$('mute');b.classList.toggle('muted',m);b.textContent=m?'🔇 Micrófono apagado':'🎙 Silenciar';$('stage').classList.toggle('muted',m);if(m){$('st').textContent='Micrófono apagado';send({type:'input_audio_buffer.clear'});}else if(live)$('st').textContent='Escuchando';}
+$('mute').onclick=function(){setMute(!muted);};
 var pending=null;
 function ask(q){lastUser=q;txLine('Médico',q);send({type:'conversation.item.create',item:{type:'message',role:'user',content:[{type:'input_text',text:q}]}});send({type:'response.create'});}
 [].forEach.call(document.querySelectorAll('.chips span'),function(c){c.onclick=function(){var q=c.textContent;if(live&&dc&&dc.readyState==='open')ask(q);else{pending=q;$('start').click();}};});
