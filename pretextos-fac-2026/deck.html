@@ -966,6 +966,15 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
   <div class="src"><b>Fuente</b><a href="https://www.xataka.com.mx/otros-1/dr-simi-tiene-miles-tiendas-mexico-ahora-tambien-tendra-whatsapp-para-pedir-medicamentos-celular" target="_blank">Xataka México, noviembre 2025</a></div>
 </section>
 
+<section class="slide video-slide" data-bg="black" data-chapter="V · Marca" data-title="Video: conversación con agente" style="padding:0"
+ data-notes="Clic 1: reproduce el video con audio (2:10). Clic 2: avanza y baja el volumen. Así se ve el mostrador cuando la conversación la atiende un agente.">
+  <div class="videobox">
+    <video src="a/agente.mp4" poster="a/agente-poster.jpg" preload="auto" playsinline></video>
+    <div class="ready"><i></i><b>Conversación con agente</b></div>
+    <div class="cap">Video · Polar Multimedia, 2026</div>
+  </div>
+</section>
+
 <!-- ================= CIERRE ================= -->
 <section class="slide pretext pz" data-scene="img:grieta" data-shade="left" data-chapter="Cierre" data-pre="6" data-tracker="1"
  data-notes="El último pretexto. Clic: se rompe. Clic: empiecen por un proceso, no por una herramienta. Clic: uno que hoy les cueste tiempo o les dé miedo frente al regulador.">
@@ -3549,7 +3558,7 @@ function toggleConnect(){var box=document.getElementById('connect');if(box.class
   if(!LIVE){box.querySelector('.cu').textContent='Abre la presentación con el archivo “Abrir presentación y acordeón” para conectar el iPhone.';box.querySelector('.qr').innerHTML='';box.classList.add('on');return;}
   fetch('/info').then(function(r){return r.json();}).then(function(d){var ips=d.ips||[];var ip=ips.filter(function(x){return x.indexOf('172.20.10.')===0;})[0]||ips[0];qrInto(box,'http://'+ip+':'+d.port+'/acordeon');}).catch(function(){box.querySelector('.qr').innerHTML='';box.querySelector('.cu').textContent='El acordeón no está encendido.';box.classList.add('on');});}
 /* ---------- índice ---------- */
-function titleOf(x){if(!x)return '— fin —';var h=x.querySelector('.q,h1,h2,.big,.eyebrow');if(x.dataset.bg==='cover')return 'Portada Expo FAC';if(x.classList.contains('video-slide'))return 'Video: Nu México';return h?h.textContent.replace(/\s+/g,' ').trim():'Lámina';}
+function titleOf(x){if(!x)return '— fin —';var h=x.querySelector('.q,h1,h2,.big,.eyebrow');if(x.dataset.bg==='cover')return 'Portada Expo FAC';if(x.classList.contains('video-slide'))return x.dataset.title||'Video';return h?h.textContent.replace(/\s+/g,' ').trim():'Lámina';}
 function toggleIndex(){
   var box=document.getElementById('index');if(box.classList.contains('on')){box.classList.remove('on');return;}
   var h='',last='';slides.forEach(function(s,i){if(s.dataset.chapter!==last){last=s.dataset.chapter;h+='<h4>'+last+'</h4>';}h+='<a data-i="'+i+'" class="'+(i===cur?'cur':'')+'">'+(i+1)+' · '+titleOf(s)+'</a>';});
