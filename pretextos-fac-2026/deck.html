@@ -439,6 +439,12 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
 .qrbox{width:230px;height:230px;background:#fff;border-radius:16px;padding:12px;flex:none}.qrbox svg{width:100%;height:100%;display:block}
 .qrtxt{font-size:24px;line-height:1.4;color:var(--soft);font-weight:600}.qrtxt b{display:block;color:#fff;font-size:32px;font-weight:800;margin-bottom:8px}
 .qrmini{position:absolute;right:130px;top:120px;display:flex;align-items:center;gap:16px;font-size:18px;font-weight:700;color:var(--soft)}.qrmini .qrbox{width:150px;height:150px;padding:8px}
+.livebtn{position:absolute;right:130px;bottom:120px;z-index:6;display:flex;align-items:center;gap:14px;background:rgba(7,23,34,.82);border:1.5px solid rgba(255,93,181,.6);color:#fff;border-radius:999px;padding:16px 26px;font:800 22px Manrope,sans-serif;cursor:pointer;backdrop-filter:blur(8px)}
+.livebtn i{width:12px;height:12px;border-radius:50%;background:#ff5db5;box-shadow:0 0 0 0 rgba(255,93,181,.7);animation:lp 1.6s infinite}
+@keyframes lp{0%{box-shadow:0 0 0 0 rgba(255,93,181,.7)}70%{box-shadow:0 0 0 14px rgba(255,93,181,0)}100%{box-shadow:0 0 0 0 rgba(255,93,181,0)}}
+#live{position:fixed;inset:0;z-index:60;background:#071722;display:none}#live.on{display:block}
+#live iframe{width:100%;height:100%;border:0}
+#live button{position:fixed;top:14px;right:16px;z-index:61;background:rgba(7,23,34,.9);color:#fff;border:1.5px solid rgba(255,255,255,.3);border-radius:999px;padding:10px 18px;font:800 15px Manrope,sans-serif;cursor:pointer}
 </style>
 </head>
 <body>
@@ -876,6 +882,7 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
     <p class="lead" data-step="4" style="margin-top:36px;font-size:30px;max-width:1250px">La alternativa: un representante que se prepara con ChatGPT por su cuenta y repite frente al médico <span class="m">una indicación no aprobada.</span></p>
     <div class="ccc" data-step="5"><span class="ok"><i>✓</i><b>Corpus</b>material aprobado</span><span class="ok"><i>✓</i><b>Criterio</b>la marca define al médico</span><span class="ok"><i>✓</i><b>Control</b>cada práctica se evalúa</span></div>
   </div>
+  <button class="livebtn" data-live="https://robcarpinteyro.github.io/claude-made/dr-g/"><i></i>Probar en vivo con el Dr. G</button>
 </section>
 
 <!-- ================= PRETEXTO 5 ================= -->
@@ -3554,5 +3561,13 @@ window.__deck={go:go,next:next,render:render,slides:slides,maxStep:maxStep};
 })();
 </script>
 <script>try{[].forEach.call(document.querySelectorAll("[data-qr]"),function(el){var q=qrcode(0,"M");q.addData(el.getAttribute("data-qr"));q.make();el.innerHTML=q.createSvgTag({cellSize:6,margin:0});});}catch(e){}</script>
+<div id="live"><button id="liveX">✕ Volver a la presentación</button><iframe id="liveF" allow="microphone; autoplay; clipboard-write" title="Demo en vivo"></iframe></div>
+<script>(function(){var L=document.getElementById('live'),F=document.getElementById('liveF');
+function openLive(u){F.src=u;L.classList.add('on');}
+function closeLive(){L.classList.remove('on');F.src='about:blank';window.focus();}
+document.getElementById('liveX').onclick=closeLive;
+[].forEach.call(document.querySelectorAll('[data-live]'),function(b){b.addEventListener('click',function(e){e.stopPropagation();openLive(b.getAttribute('data-live'));});});
+addEventListener('keydown',function(e){if(L.classList.contains('on')&&e.key==='Escape'){closeLive();e.stopImmediatePropagation();}},true);
+})();</script>
 </body>
 </html>
