@@ -1,0 +1,1 @@
+window.DRG_API='';

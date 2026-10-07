@@ -84,10 +84,12 @@ table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;p
   <label>API key</label><input id="key" type="password" placeholder="sk-..." autocomplete="off">
   <div class="go" style="margin-top:14px"><button class="btn p" id="saveKey">Guardar</button><button class="btn s" id="delKey">Borrar</button><span class="msg" id="kmsg"></span></div></div></main>
 <div class="foot">Demo · Polar Multimedia · voz y evaluación con OpenAI</div>
+<script src="config.js"></script>
 <script>
 (function(){
 var $=function(i){return document.getElementById(i);};
 var LS={get:function(k,d){try{var v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}},set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+var API=(window.DRG_API||'').replace(/\/$/,'');if(API){document.getElementById('tabKey').classList.add('hid');}
 var TYPES={esceptico:'Escéptico de la evidencia',apurado:'Apurado',competencia:'Fiel a la competencia'};
 var type='esceptico';
 [].forEach.call(document.querySelectorAll('#types button'),function(b){b.onclick=function(){if(live)return;[].forEach.call(document.querySelectorAll('#types button'),function(x){x.classList.remove('sel');});b.classList.add('sel');type=b.dataset.t;$('typeLbl').textContent=TYPES[type];};});
@@ -130,6 +132,9 @@ function onEvent(e){var d;try{d=JSON.parse(e.data);}catch(x){return;}var t=d.typ
 
 async function token(key){
   var instr=persona();
+  if(API){var ra=await fetch(API+'/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({instructions:instr})});
+    if(!ra.ok){var em='';try{em=(await ra.json()).error.message;}catch(x){}throw new Error(em||('servidor '+ra.status));}
+    var ja=await ra.json();return {ek:ja.value||(ja.client_secret&&ja.client_secret.value),url:'https://api.openai.com/v1/realtime/calls?model=gpt-realtime'};}
   var r=await fetch('https://api.openai.com/v1/realtime/client_secrets',{method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
     body:JSON.stringify({session:{type:'realtime',model:'gpt-realtime',instructions:instr,audio:{input:{transcription:{model:'gpt-4o-mini-transcribe',language:'es'},turn_detection:{type:'semantic_vad'}},output:{voice:'cedar'}}}})});
   if(r.ok){var j=await r.json();return {ek:j.value||(j.client_secret&&j.client_secret.value),url:'https://api.openai.com/v1/realtime/calls?model=gpt-realtime'};}
@@ -140,7 +145,7 @@ async function token(key){
 }
 
 $('start').onclick=async function(){
-  var key=LS.get('drg-key','');if(!key){tab('Key');$('kmsg').textContent='Primero pega tu llave de OpenAI.';return;}
+  var key=LS.get('drg-key','');if(!API&&!key){tab('Key');$('kmsg').textContent='Primero pega tu llave de OpenAI.';return;}
   LS.set('drg-rep',$('rep').value);LS.set('drg-prod',$('prod').value);
   $('msg').textContent='';$('ev').classList.add('hid');this.disabled=true;setState('Conectando…');
   try{
@@ -176,7 +181,7 @@ async function evaluate(dur){
   ev.innerHTML='<h2>Evaluación</h2><p style="color:var(--s)">El coach está revisando tu visita…</p>';
   var txt=transcript.map(function(x){return (x.role==='rep'?'REPRESENTANTE':'DR. G')+': '+x.text;}).join('\n');
   try{
-    var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+LS.get('drg-key',''),'Content-Type':'application/json'},
+    var r=await fetch(API?API+'/evaluate':'https://api.openai.com/v1/chat/completions',{method:'POST',headers:API?{'Content-Type':'application/json'}:{'Authorization':'Bearer '+LS.get('drg-key',''),'Content-Type':'application/json'},
       body:JSON.stringify({model:'gpt-4.1',temperature:0.2,messages:[{role:'system',content:RUBRIC},{role:'user',content:'Producto presentado: '+$('prod').value+'\nTipo de médico: '+TYPES[type]+'\n\nTranscripción:\n'+txt}],
       response_format:{type:'json_schema',json_schema:{name:'evaluacion',strict:true,schema:SCHEMA}}})});
     if(!r.ok){var m='';try{m=(await r.json()).error.message;}catch(x){}throw new Error(m||r.status);}
