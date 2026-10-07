@@ -1,1 +1,1 @@
-window.DRG_API='';
+window.DRG_API='https://dr-g.carpinteyro.workers.dev';
