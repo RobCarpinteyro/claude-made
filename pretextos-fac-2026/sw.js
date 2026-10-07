@@ -1,10 +1,18 @@
-// Guarda la presentación completa para que funcione sin internet una vez cargada
+// Guarda la presentación completa para que funcione sin internet una vez cargada.
+// Páginas HTML: primero la red (siempre la versión más nueva) y, si no hay señal, la copia guardada.
+// Imágenes, video y tipografías: primero la copia guardada.
 self.addEventListener('install',function(e){self.skipWaiting();});
 self.addEventListener('activate',function(e){e.waitUntil(self.clients.claim());});
 self.addEventListener('fetch',function(e){
   var u=new URL(e.request.url);
   if(e.request.method!=='GET'||u.origin!==location.origin)return;
-  if(/assets\.json$|\/$|index\.html$|sw\.js$/.test(u.pathname))return; // siempre frescos
+  if(/assets\.json$|sw\.js$/.test(u.pathname))return;
+  if(/\.html$|\/$/.test(u.pathname)){
+    e.respondWith(fetch(e.request,{cache:'no-store'}).then(function(r){
+      if(r.ok){var cl=r.clone();caches.keys().then(function(ks){ks.forEach(function(k){if(k.indexOf('pretextos-')===0)caches.open(k).then(function(c){c.put(u.pathname.split('/').pop()||'index.html',cl.clone());});});});}
+      return r;}).catch(function(){return caches.match(e.request,{ignoreSearch:true});}));
+    return;
+  }
   var range=e.request.headers.get('range');
   e.respondWith(caches.match(e.request,{ignoreSearch:true}).then(function(r){
     if(!r)return fetch(e.request);
