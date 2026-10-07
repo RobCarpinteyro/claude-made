@@ -1,0 +1,1 @@
+window.LEAD_URL='';

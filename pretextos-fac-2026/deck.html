@@ -435,6 +435,10 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
 .vphone{position:absolute;right:120px;top:130px;height:800px;aspect-ratio:9/16;margin:0;border-radius:34px;overflow:hidden;border:2px solid rgba(255,255,255,.18);box-shadow:0 40px 90px rgba(0,0,0,.5);background:#000;z-index:4}
 .vphone video{width:100%;height:100%;object-fit:cover;display:block}
 .vphone figcaption{position:absolute;left:0;right:0;bottom:0;padding:40px 18px 14px;background:linear-gradient(transparent,rgba(0,0,0,.75));font-size:15px;font-weight:700;color:#cfe;letter-spacing:.02em}
+.qrend{position:absolute;right:130px;bottom:130px;display:flex;align-items:center;gap:26px;background:rgba(7,23,34,.78);backdrop-filter:blur(10px);border:1.5px solid rgba(81,196,202,.45);border-radius:26px;padding:22px 30px 22px 22px;max-width:620px}
+.qrbox{width:230px;height:230px;background:#fff;border-radius:16px;padding:12px;flex:none}.qrbox svg{width:100%;height:100%;display:block}
+.qrtxt{font-size:24px;line-height:1.4;color:var(--soft);font-weight:600}.qrtxt b{display:block;color:#fff;font-size:32px;font-weight:800;margin-bottom:8px}
+.qrmini{position:absolute;right:130px;top:120px;display:flex;align-items:center;gap:16px;font-size:18px;font-weight:700;color:var(--soft)}.qrmini .qrbox{width:150px;height:150px;padding:8px}
 </style>
 </head>
 <body>
@@ -989,6 +993,7 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
       <div class="who sig">Roberto Carpinteyro<span>polarmultimedia.com</span></div>
     </div>
   </div>
+  <div class="qrend" data-step="3"><div class="qrbox" data-qr="https://robcarpinteyro.github.io/claude-made/pretextos-fac-2026/contacto/"></div><div class="qrtxt"><b>Llévate esta presentación</b>Escanea, déjanos tus datos y ábrela en tu celular con todas sus fuentes.</div></div>
 </section>
 
 <section class="slide pz" data-scene="plain" data-shade="none" data-chapter="Fuentes"
@@ -1012,6 +1017,7 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
     <div><b>Xataka México</b>, Farmacias Similares en WhatsApp, nov 2025 · <a href="https://www.xataka.com.mx/otros-1/dr-simi-tiene-miles-tiendas-mexico-ahora-tambien-tendra-whatsapp-para-pedir-medicamentos-celular" target="_blank">abrir</a></div>
     <div><b>Casos con el símbolo de Polar</b>: proyectos de Polar Multimedia para laboratorios y cadenas en México, 2025–2026.</div>
   </div>
+  <div class="qrmini"><div class="qrbox" data-qr="https://robcarpinteyro.github.io/claude-made/pretextos-fac-2026/contacto/"></div><span>Llévate esta<br>presentación</span></div>
 </section>
 
 </div><!-- /stage -->
@@ -3547,5 +3553,6 @@ setTimeout(ready,6000);
 window.__deck={go:go,next:next,render:render,slides:slides,maxStep:maxStep};
 })();
 </script>
+<script>try{[].forEach.call(document.querySelectorAll("[data-qr]"),function(el){var q=qrcode(0,"M");q.addData(el.getAttribute("data-qr"));q.make();el.innerHTML=q.createSvgTag({cellSize:6,margin:0});});}catch(e){}</script>
 </body>
 </html>

@@ -1,0 +1,54 @@
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Se acabaron los pretextos · Llévate la presentación</title>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#071722;--card:#0e2331;--line:rgba(255,255,255,.12);--c:#51c4ca;--m:#ff5db5;--y:#e8e038;--s:#c9dce3}
+*{box-sizing:border-box}html,body{margin:0;background:var(--bg);color:#fff;font-family:Manrope,system-ui,sans-serif}
+body{min-height:100vh;background:radial-gradient(700px 500px at 90% 0%,rgba(81,196,202,.16),transparent 60%),radial-gradient(600px 500px at 0% 100%,rgba(255,93,181,.12),transparent 60%),var(--bg)}
+.w{max-width:520px;margin:0 auto;padding:34px 20px 50px}
+.ey{font-size:12px;letter-spacing:.2em;text-transform:uppercase;color:var(--c);font-weight:800}
+h1{font-size:36px;line-height:1.05;margin:10px 0 8px;font-weight:800}h1 span{color:var(--m)}
+.by{color:var(--s);font-weight:700;font-size:15px;margin-bottom:22px}
+p.lead{color:var(--s);font-size:17px;line-height:1.5;margin:0 0 22px;font-weight:500}
+label{display:block;font-size:13px;font-weight:800;color:var(--s);margin:14px 0 6px}
+input,select{width:100%;background:#081a26;border:1.5px solid var(--line);color:#fff;border-radius:12px;padding:14px;font:700 16px Manrope}
+input:focus,select:focus{outline:none;border-color:var(--c)}
+.ck{display:flex;gap:10px;align-items:flex-start;margin-top:18px;font-size:13px;color:var(--s);line-height:1.45;font-weight:500}.ck input{width:20px;height:20px;flex:none;margin-top:2px}
+button,a.b{display:block;width:100%;text-align:center;border:0;border-radius:14px;padding:17px;font:800 18px Manrope;margin-top:22px;cursor:pointer;text-decoration:none;background:var(--c);color:#071722}
+button:disabled{opacity:.5}
+.msg{color:var(--y);font-weight:700;font-size:14px;min-height:20px;margin-top:10px}
+.ok{display:none;text-align:center}.ok h2{font-size:28px;margin:10px 0}.ok p{color:var(--s);font-size:16px;line-height:1.5}
+a.sec{background:transparent;color:#fff;border:1.5px solid var(--line);font-size:16px}
+.foot{margin-top:30px;color:rgba(201,220,227,.55);font-size:12px;line-height:1.5;text-align:center}
+</style></head><body><div class="w">
+<div class="ey">Expo FAC · Pharma Summit 2026</div>
+<h1>Se acabaron <span>los pretextos.</span></h1>
+<div class="by">Roberto Carpinteyro · Polar Multimedia</div>
+<form id="f">
+<p class="lead">Déjanos tus datos y llévate la presentación completa, con los casos y todas sus fuentes.</p>
+<label>Nombre completo</label><input name="nombre" required autocomplete="name">
+<label>Empresa o laboratorio</label><input name="empresa" required autocomplete="organization">
+<label>Cargo</label><input name="cargo" autocomplete="organization-title">
+<label>Correo</label><input name="correo" type="email" required autocomplete="email">
+<label>WhatsApp (opcional)</label><input name="whatsapp" type="tel" autocomplete="tel">
+<label>¿Qué te gustaría resolver primero?</label>
+<select name="interes"><option value="">Elige una opción</option><option>Agente que responde a médicos con estudios aprobados</option><option>Hub y capacitación para fuerza de ventas</option><option>Simulador de visita médica</option><option>Visibilidad de mi marca en ChatGPT</option><option>Revisión de piezas antes de publicar</option><option>Experiencias en vivo y congresos</option><option>Otro</option></select>
+<div class="ck"><input type="checkbox" name="acepta" id="acepta" required><label for="acepta" style="margin:0;font-weight:500;font-size:13px">Acepto que Polar Multimedia use estos datos para enviarme la presentación y contactarme sobre temas relacionados. Puedo pedir que los borren en cualquier momento escribiendo a contacto en polarmultimedia.com.</label></div>
+<button id="go">Ver la presentación</button><div class="msg" id="msg"></div>
+</form>
+<div class="ok" id="ok"><h2>¡Gracias!</h2><p>Ya puedes abrirla. Te escribiremos pronto.</p>
+<a class="b" href="../">Abrir la presentación</a><a class="b sec" href="https://polarmultimedia.com" target="_blank">Conocer Polar Multimedia</a></div>
+<div class="foot">Polar Multimedia · Ciudad de México</div>
+</div>
+<script src="config.js"></script>
+<script>
+(function(){
+var f=document.getElementById('f'),m=document.getElementById('msg');
+try{if(localStorage.getItem('pretextos-lead')){f.style.display='none';document.getElementById('ok').style.display='block';}}catch(e){}
+f.onsubmit=function(ev){ev.preventDefault();var d={};new FormData(f).forEach(function(v,k){d[k]=String(v).trim();});d.acepta=d.acepta?'sí':'no';d.fecha=new Date().toISOString();
+  var b=document.getElementById('go');b.disabled=true;b.textContent='Enviando…';
+  var done=function(){try{localStorage.setItem('pretextos-lead','1');}catch(e){}f.style.display='none';document.getElementById('ok').style.display='block';};
+  if(!window.LEAD_URL){done();return;}
+  fetch(window.LEAD_URL,{method:'POST',mode:'no-cors',body:JSON.stringify(d)}).then(done,function(){b.disabled=false;b.textContent='Ver la presentación';m.textContent='No se pudo enviar. Revisa tu señal e intenta de nuevo.';});};
+})();
+</script></body></html>
