@@ -3580,7 +3580,9 @@ window.__deck={go:go,next:next,render:render,slides:slides,maxStep:maxStep};
 <script>try{[].forEach.call(document.querySelectorAll("[data-qr]"),function(el){var q=qrcode(0,"M");q.addData(el.getAttribute("data-qr"));q.make();el.innerHTML=q.createSvgTag({cellSize:6,margin:0});});}catch(e){}</script>
 <div id="live"><button id="liveX">✕ Volver a la presentación</button><iframe id="liveF" allow="microphone; autoplay; clipboard-write" title="Demo en vivo"></iframe></div>
 <script>(function(){var L=document.getElementById('live'),F=document.getElementById('liveF');
-function openLive(u){F.src=u;L.classList.add('on');}
+var W=null;function openLive(u){var x=screen.availLeft||0,y=screen.availTop||0,w=screen.availWidth,h=screen.availHeight;
+  try{W=window.open(u,'polar-demo','popup=yes,left='+x+',top='+y+',width='+w+',height='+h);}catch(e){W=null;}
+  if(W){try{W.focus();}catch(e){}return;}F.src=u;L.classList.add('on');}
 function closeLive(){L.classList.remove('on');F.src='about:blank';window.focus();}
 document.getElementById('liveX').onclick=closeLive;
 [].forEach.call(document.querySelectorAll('[data-live]'),function(b){b.addEventListener('click',function(e){e.stopPropagation();openLive(b.getAttribute('data-live'));});});
