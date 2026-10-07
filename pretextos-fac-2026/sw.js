@@ -9,7 +9,7 @@ self.addEventListener('fetch',function(e){
   if(/assets\.json$|sw\.js$/.test(u.pathname))return;
   if(/\.html$|\/$/.test(u.pathname)){
     e.respondWith(fetch(e.request,{cache:'no-store'}).then(function(r){
-      if(r.ok){var cl=r.clone();caches.keys().then(function(ks){ks.forEach(function(k){if(k.indexOf('pretextos-')===0)caches.open(k).then(function(c){c.put(u.pathname.split('/').pop()||'index.html',cl.clone());});});});}
+      if(r.ok){var cl=r.clone();caches.keys().then(function(ks){ks.forEach(function(k){if(k.indexOf('pretextos-')===0)caches.open(k).then(function(c){c.put(u.origin+u.pathname,cl.clone());});});});}
       return r;}).catch(function(){return caches.match(e.request,{ignoreSearch:true});}));
     return;
   }
