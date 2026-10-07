@@ -432,6 +432,9 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
 .fsteps div em{font-style:normal;color:#fff;font-weight:800}
 .analog{margin-top:34px;max-width:780px;padding:22px 28px;border-left:4px solid var(--y);background:rgba(14,35,49,.7);border-radius:0 16px 16px 0;font-size:25px;line-height:1.45;color:var(--soft);font-weight:600}
 .analog b{color:#fff}
+.vphone{position:absolute;right:120px;top:130px;height:800px;aspect-ratio:9/16;margin:0;border-radius:34px;overflow:hidden;border:2px solid rgba(255,255,255,.18);box-shadow:0 40px 90px rgba(0,0,0,.5);background:#000;z-index:4}
+.vphone video{width:100%;height:100%;object-fit:cover;display:block}
+.vphone figcaption{position:absolute;left:0;right:0;bottom:0;padding:40px 18px 14px;background:linear-gradient(transparent,rgba(0,0,0,.75));font-size:15px;font-weight:700;color:#cfe;letter-spacing:.02em}
 </style>
 </head>
 <body>
@@ -801,7 +804,7 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
 
 <section class="slide dense pz" data-scene="img:consultorio" data-shade="full" data-chapter="III · Confianza" data-tracker="1" data-polar="1"
  data-notes="Caso Polar. Educación médica en tiempo real: cada respuesta del juego muestra su fuente en pantalla, el VAR de la evidencia. Junio y julio de 2026, ocho sedes en seis ciudades, cerca de 500 médicos, 97% terminó.">
-  <div class="col" style="max-width:1300px">
+  <div class="col" style="max-width:1100px">
     <div class="eyebrow"><img class="pm" src="a/bear.png" alt="">Caso Polar · educación médica</div>
     <h2>El <em>VAR de la evidencia:</em> cada respuesta, con su fuente en pantalla.</h2>
     <div class="stats">
@@ -811,6 +814,7 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
     </div>
     <div class="ccc" data-step="4"><span class="ok"><i>✓</i><b>Corpus</b>evidencia publicada</span><span class="ok"><i>✓</i><b>Criterio</b>aval de asociación médica</span><span class="ok"><i>✓</i><b>Control</b>fuente en cada respuesta</span></div>
   </div>
+  <figure class="vphone"><video src="a/var916.mp4" autoplay muted loop playsinline preload="auto"></video><figcaption>El Partido de la Evidencia · Ki-CAB</figcaption></figure>
   <div class="src"><b>Fuente</b>Datos internos del proyecto, Polar Multimedia, junio–julio 2026</div>
 </section>
 

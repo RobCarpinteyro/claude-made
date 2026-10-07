@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Dr. G · Simulador de visita</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#071722;--card:#0e2331;--line:rgba(255,255,255,.1);--c:#51c4ca;--m:#ff5db5;--y:#e8e038;--g:#3ddc84;--r:#ff5d6c;--s:#c9dce3;--d:rgba(201,220,227,.65)}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:#fff;font-family:Manrope,system-ui,sans-serif}
+body{background:radial-gradient(1000px 600px at 80% 0%,rgba(81,196,202,.12),transparent 60%),var(--bg)}
+header{display:flex;align-items:center;gap:18px;padding:18px 28px;border-bottom:1px solid var(--line)}
+header img.c{height:30px}header .t{font-weight:800;font-size:17px}header .t small{display:block;font-weight:600;font-size:13px;color:var(--d)}
+header .sp{flex:1}header button{background:none;border:1px solid var(--line);color:var(--s);border-radius:999px;padding:8px 14px;font:700 13px Manrope;cursor:pointer}
+header button.on{border-color:var(--c);color:var(--c)}
+main{display:grid;grid-template-columns:minmax(300px,440px) 1fr;gap:28px;padding:26px 28px;max-width:1400px;margin:0 auto}
+@media(max-width:900px){main{grid-template-columns:1fr}}
+.stage{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:512/896;background:#0b1a24;border:2px solid var(--line);transition:border-color .3s,box-shadow .3s;max-height:calc(100vh - 130px)}
+.stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .35s}
+.stage #vS{opacity:0}.stage.speaking #vS{opacity:1}
+.stage.live{border-color:rgba(81,196,202,.6)}.stage.speaking{border-color:var(--m);box-shadow:0 0 40px rgba(255,93,181,.25)}
+.badge{position:absolute;left:14px;top:14px;background:rgba(7,23,34,.75);backdrop-filter:blur(8px);border-radius:999px;padding:8px 14px;font-weight:800;font-size:13px;display:flex;gap:8px;align-items:center}
+.badge i{width:9px;height:9px;border-radius:50%;background:#667}.live .badge i{background:var(--g)}.speaking .badge i{background:var(--m)}
+.timer{position:absolute;right:14px;top:14px;background:rgba(7,23,34,.75);border-radius:999px;padding:8px 14px;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums}
+.timer.warn{color:var(--y)}
+.name{position:absolute;left:0;right:0;bottom:0;padding:60px 20px 18px;background:linear-gradient(transparent,rgba(7,23,34,.92));font-weight:800;font-size:22px}
+.name small{display:block;font-size:14px;color:var(--s);font-weight:600}
+.panel{display:flex;flex-direction:column;gap:18px;min-width:0}
+.card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px}
+.card h2{margin:0 0 14px;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--c)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:600px){.row{grid-template-columns:1fr}}
+label{display:block;font-size:13px;font-weight:700;color:var(--d);margin-bottom:6px}
+input,select{width:100%;background:#081a26;border:1px solid var(--line);color:#fff;border-radius:12px;padding:12px 14px;font:600 15px Manrope}
+.types{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}@media(max-width:600px){.types{grid-template-columns:1fr}}
+.types button{text-align:left;background:#081a26;border:1.5px solid var(--line);color:#fff;border-radius:14px;padding:14px;cursor:pointer;font:inherit}
+.types button b{display:block;font-size:15px}.types button span{font-size:13px;color:var(--d)}
+.types button.sel{border-color:var(--c);background:rgba(81,196,202,.1)}
+.go{display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.btn{border:0;border-radius:14px;padding:16px 26px;font:800 17px Manrope;cursor:pointer}
+.btn.p{background:var(--c);color:#071722}.btn.e{background:var(--m);color:#071722}.btn.s{background:transparent;color:#fff;border:1.5px solid var(--line)}
+.btn:disabled{opacity:.45;cursor:default}
+.msg{font-size:14px;color:var(--y);font-weight:600;min-height:18px}
+.tx{max-height:260px;overflow:auto;display:flex;flex-direction:column;gap:8px;font-size:15px;line-height:1.45}
+.tx div{padding:9px 12px;border-radius:12px;max-width:88%}.tx .u{align-self:flex-end;background:rgba(81,196,202,.14)}.tx .a{background:rgba(255,93,181,.12)}
+.tx .who{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--d);margin-bottom:2px}
+.ev .tot{display:flex;align-items:baseline;gap:12px}.ev .tot b{font-size:64px;font-weight:800;color:var(--c);line-height:1}.ev .tot span{color:var(--d);font-weight:700}
+.ph{display:grid;grid-template-columns:150px 1fr 40px;gap:12px;align-items:center;margin-top:12px}
+.ph .bar{height:10px;border-radius:6px;background:rgba(255,255,255,.08);overflow:hidden}.ph .bar i{display:block;height:100%;background:linear-gradient(90deg,var(--c),var(--m))}
+.ph b{font-size:15px}.ph em{font-style:normal;font-weight:800;text-align:right}
+.ph p{grid-column:2/4;margin:-4px 0 0;font-size:13px;color:var(--d)}
+.alert{margin-top:16px;padding:12px 14px;border-radius:12px;font-weight:700;font-size:14px}.alert.ok{background:rgba(61,220,132,.12);color:#bff5d6}.alert.bad{background:rgba(255,93,108,.15);color:#ffc9ce}
+.q{margin-top:14px;padding:12px 14px;border-left:3px solid var(--c);background:rgba(255,255,255,.03);border-radius:0 12px 12px 0;font-size:15px}
+.q.w{border-color:var(--m)}.q small{display:block;font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--d);margin-bottom:4px}
+.rec{margin:14px 0 0;padding-left:20px}.rec li{margin-bottom:6px;font-size:15px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--line)}th{color:var(--d);font-size:12px;text-transform:uppercase;letter-spacing:.08em}
+.hid{display:none!important}
+.foot{color:var(--d);font-size:12px;text-align:center;padding:10px 0 24px}
+</style></head><body>
+<header><img class="c" src="carnot.png" alt="Carnot"><div class="t">Dr. G · Simulador de visita médica<small>El médico difícil que mide la estructura de tu presentación</small></div><div class="sp"></div>
+<button id="tabSim" class="on">Simulador</button><button id="tabHist">Historial</button><button id="tabKey">Llave</button></header>
+<main id="vSim">
+  <div><div class="stage" id="stage"><video id="vL" poster="poster.jpg" autoplay loop muted playsinline><source src="listens.webm" type="video/webm"><source src="listens.mp4" type="video/mp4"></video><video id="vS" autoplay loop muted playsinline><source src="speaks.webm" type="video/webm"><source src="speaks.mp4" type="video/mp4"></video>
+    <div class="badge"><i></i><span id="st">Listo</span></div><div class="timer" id="tm">5:00</div>
+    <div class="name">Dr. G<small id="typeLbl">Escéptico de la evidencia</small></div></div></div>
+  <div class="panel">
+    <div class="card" id="setup"><h2>La visita</h2>
+      <div class="row"><div><label>Representante</label><input id="rep" placeholder="Nombre y apellido"></div>
+      <div><label>Producto que presenta</label><input id="prod" list="prods" value="Bacmune (MV130)"><datalist id="prods"><option>Bacmune (MV130)</option><option>Línea Salud Femenina</option><option>Lacteol Fort</option></datalist></div></div>
+      <label style="margin-top:16px">Tipo de médico</label>
+      <div class="types" id="types">
+        <button data-t="esceptico" class="sel"><b>Escéptico</b><span>Pide estudios, números y fuentes</span></button>
+        <button data-t="apurado"><b>Apurado</b><span>Tiene 3 minutos e interrumpe</span></button>
+        <button data-t="competencia"><b>Fiel a la competencia</b><span>Ya usa otro y le funciona</span></button>
+      </div>
+      <div class="go" style="margin-top:20px"><button class="btn p" id="start">Iniciar visita</button><button class="btn e hid" id="stop">Terminar y evaluar</button>
+        <label style="display:flex;gap:8px;align-items:center;margin:0;cursor:pointer"><input type="checkbox" id="showTx" checked style="width:auto"> Mostrar conversación</label></div>
+      <div class="msg" id="msg"></div>
+    </div>
+    <div class="card" id="txCard"><h2>Conversación</h2><div class="tx" id="tx"><div class="a" style="opacity:.6"><span class="who">Dr. G</span>Aquí aparece lo que se dice en la visita.</div></div></div>
+    <div class="card ev hid" id="ev"></div>
+  </div>
+</main>
+<main id="vHist" class="hid" style="display:block"><div class="card"><h2>Historial de visitas</h2><div id="hist"></div>
+  <div class="go" style="margin-top:16px"><button class="btn s" id="csv">Descargar CSV</button><button class="btn s" id="clr">Borrar historial</button></div></div></main>
+<main id="vKey" class="hid" style="display:block"><div class="card" style="max-width:640px"><h2>Llave de OpenAI</h2>
+  <p style="color:var(--s);line-height:1.6;margin-top:0">El simulador usa tu cuenta de OpenAI para la voz y la evaluación. La llave se guarda solo en este navegador; no viaja a ningún otro lado que no sea OpenAI.</p>
+  <label>API key</label><input id="key" type="password" placeholder="sk-..." autocomplete="off">
+  <div class="go" style="margin-top:14px"><button class="btn p" id="saveKey">Guardar</button><button class="btn s" id="delKey">Borrar</button><span class="msg" id="kmsg"></span></div></div></main>
+<div class="foot">Demo · Polar Multimedia · voz y evaluación con OpenAI</div>
+<script>
+(function(){
+var $=function(i){return document.getElementById(i);};
+var LS={get:function(k,d){try{var v=localStorage.getItem(k);return v==null?d:v;}catch(e){return d;}},set:function(k,v){try{localStorage.setItem(k,v);}catch(e){}}};
+var TYPES={esceptico:'Escéptico de la evidencia',apurado:'Apurado',competencia:'Fiel a la competencia'};
+var type='esceptico';
+[].forEach.call(document.querySelectorAll('#types button'),function(b){b.onclick=function(){if(live)return;[].forEach.call(document.querySelectorAll('#types button'),function(x){x.classList.remove('sel');});b.classList.add('sel');type=b.dataset.t;$('typeLbl').textContent=TYPES[type];};});
+$('rep').value=LS.get('drg-rep','');$('prod').value=LS.get('drg-prod','Bacmune (MV130)');
+function tab(n){['Sim','Hist','Key'].forEach(function(x){$('v'+x).classList.toggle('hid',x!==n);$('tab'+x).classList.toggle('on',x===n);});if(n==='Hist')renderHist();}
+$('tabSim').onclick=function(){tab('Sim');};$('tabHist').onclick=function(){tab('Hist');};$('tabKey').onclick=function(){tab('Key');};
+$('key').value=LS.get('drg-key','');
+$('saveKey').onclick=function(){LS.set('drg-key',$('key').value.trim());$('kmsg').textContent='Guardada en este navegador.';};
+$('delKey').onclick=function(){LS.set('drg-key','');$('key').value='';$('kmsg').textContent='Borrada.';};
+$('showTx').onchange=function(){$('txCard').classList.toggle('hid',!this.checked);};
+
+function persona(){
+  var prod=$('prod').value.trim()||'un producto';
+  var base='Eres el Dr. G, médico especialista mexicano en consulta privada, con agenda llena y poca paciencia para visitas comerciales. Un representante médico viene a presentarte '+prod+'. Tu papel es ser un médico DIFÍCIL pero REAL: no grosero, sí exigente. Hablas en español de México, con frases cortas y tono seco, como en una consulta real.\n\n'+
+  'Cómo te comportas:\n- Abres tú la visita con prisa, por ejemplo: "Buenas. Tengo cinco minutos, ¿qué me trae?"\n- Si el representante no te pregunta nada sobre tus pacientes o tu práctica, lo notas: "¿Y usted sabe qué pacientes veo yo?"\n- Si da un dato, pides la fuente: "¿De qué estudio sale eso? ¿Cuántos pacientes?"\n- Si habla de beneficios genéricos, lo cortas: "Eso dicen todos."\n- Planteas una o dos objeciones reales durante la visita, por ejemplo: precio para el paciente, "ya uso otro y me funciona", falta de evidencia en población mexicana, efectos adversos, o "mis pacientes no lo van a tomar".\n- Si el representante maneja bien una objeción (escucha, aclara y responde con evidencia), cedes un poco. Si no, endureces.\n- Si te pide un compromiso concreto y te convenció, aceptas algo pequeño ("Déjeme muestras, lo pruebo con un par de pacientes"). Si no te convenció, cierras: "Bueno, déjeme su material."\n- Si menciona usos fuera de indicación o promete cosas sin evidencia, lo confrontas: "¿Eso está en la indicación?"\n\n';
+  var t={esceptico:'Tu perfil: ESCÉPTICO DE LA EVIDENCIA. Eres académico; te importan el diseño del estudio, el número de pacientes, la población y quién lo financió. Desconfías de los folletos y de las cifras redondas.',
+         apurado:'Tu perfil: APURADO. Tienes pacientes esperando. Interrumpes si el representante se extiende, miras el reloj y pides que vaya al grano. Solo te convence algo claro y breve.',
+         competencia:'Tu perfil: FIEL A LA COMPETENCIA. Ya recetas otro producto de la misma categoría desde hace años y te funciona. No mencionas marcas, pero preguntas "¿por qué habría de cambiar?" y pides una razón concreta para tus pacientes.'}[type];
+  return base+t+'\n\nReglas:\n- Nunca salgas del personaje ni des retroalimentación durante la visita.\n- No inventes datos del producto: tú preguntas y objetas; el representante responde.\n- Respuestas breves: una a tres frases.\n- La visita dura máximo cinco minutos; si se alarga, mira el reloj y ciérrala.';
+}
+
+var pc=null,dc=null,stream=null,audioEl=null,live=false,transcript=[],t0=0,tmr=null,closing=false;
+function setState(s){$('st').textContent=s;}
+function speaking(on){$('stage').classList.toggle('speaking',!!on);}
+function addTx(role,text){if(!text||!text.trim())return;transcript.push({role:role,text:text.trim(),t:Math.round((Date.now()-t0)/1000)});
+  var tx=$('tx');if(transcript.length===1)tx.innerHTML='';var d=document.createElement('div');d.className=role==='rep'?'u':'a';
+  d.innerHTML='<span class="who">'+(role==='rep'?($('rep').value||'Representante'):'Dr. G')+'</span>';d.appendChild(document.createTextNode(text.trim()));tx.appendChild(d);tx.scrollTop=tx.scrollHeight;}
+function tick(){var left=300-Math.floor((Date.now()-t0)/1000);if(left<0)left=0;$('tm').textContent=Math.floor(left/60)+':'+('0'+left%60).slice(-2);$('tm').classList.toggle('warn',left<=60);
+  if(left<=0&&!closing&&dc&&dc.readyState==='open'){closing=true;send({type:'response.create',response:{instructions:'Se acabó el tiempo. Cierra la visita ahora mismo en una sola frase, como lo haría el Dr. G.'}});}}
+function send(o){try{dc.send(JSON.stringify(o));}catch(e){}}
+
+function onEvent(e){var d;try{d=JSON.parse(e.data);}catch(x){return;}var t=d.type||'';
+  if(t==='conversation.item.input_audio_transcription.completed')addTx('rep',d.transcript);
+  else if(t==='response.output_audio_transcript.done'||t==='response.audio_transcript.done')addTx('dr',d.transcript);
+  else if(t==='output_audio_buffer.started'||t==='response.output_audio_transcript.delta'||t==='response.audio_transcript.delta')speaking(true);
+  else if(t==='output_audio_buffer.stopped'||t==='output_audio_buffer.cleared')speaking(false);
+  else if(t==='input_audio_buffer.speech_started')speaking(false);
+  else if(t==='error'){$('msg').textContent='OpenAI: '+((d.error&&d.error.message)||'error');}
+}
+
+async function token(key){
+  var instr=persona();
+  var r=await fetch('https://api.openai.com/v1/realtime/client_secrets',{method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+    body:JSON.stringify({session:{type:'realtime',model:'gpt-realtime',instructions:instr,audio:{input:{transcription:{model:'gpt-4o-mini-transcribe',language:'es'},turn_detection:{type:'semantic_vad'}},output:{voice:'cedar'}}}})});
+  if(r.ok){var j=await r.json();return {ek:j.value||(j.client_secret&&j.client_secret.value),url:'https://api.openai.com/v1/realtime/calls?model=gpt-realtime'};}
+  var r2=await fetch('https://api.openai.com/v1/realtime/sessions',{method:'POST',headers:{'Authorization':'Bearer '+key,'Content-Type':'application/json'},
+    body:JSON.stringify({model:'gpt-4o-realtime-preview',voice:'ash',instructions:instr,input_audio_transcription:{model:'whisper-1',language:'es'},turn_detection:{type:'server_vad'}})});
+  if(!r2.ok){var err='';try{err=(await r.json()).error.message;}catch(x){}throw new Error(err||('HTTP '+r.status));}
+  var j2=await r2.json();return {ek:j2.client_secret.value,url:'https://api.openai.com/v1/realtime?model=gpt-4o-realtime-preview'};
+}
+
+$('start').onclick=async function(){
+  var key=LS.get('drg-key','');if(!key){tab('Key');$('kmsg').textContent='Primero pega tu llave de OpenAI.';return;}
+  LS.set('drg-rep',$('rep').value);LS.set('drg-prod',$('prod').value);
+  $('msg').textContent='';$('ev').classList.add('hid');this.disabled=true;setState('Conectando…');
+  try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
+    var tk=await token(key);
+    pc=new RTCPeerConnection();audioEl=new Audio();audioEl.autoplay=true;pc.ontrack=function(ev){audioEl.srcObject=ev.streams[0];};
+    stream.getTracks().forEach(function(tr){pc.addTrack(tr,stream);});
+    dc=pc.createDataChannel('oai-events');dc.onmessage=onEvent;
+    dc.onopen=function(){send({type:'response.create'});};
+    var offer=await pc.createOffer();await pc.setLocalDescription(offer);
+    var ans=await fetch(tk.url,{method:'POST',body:offer.sdp,headers:{'Authorization':'Bearer '+tk.ek,'Content-Type':'application/sdp'}});
+    if(!ans.ok)throw new Error('No se pudo abrir la llamada ('+ans.status+')');
+    await pc.setRemoteDescription({type:'answer',sdp:await ans.text()});
+    live=true;closing=false;transcript=[];t0=Date.now();$('stage').classList.add('live');setState('En visita');
+    $('start').classList.add('hid');$('stop').classList.remove('hid');tick();tmr=setInterval(tick,500);
+  }catch(err){cleanup();$('msg').textContent='No se pudo iniciar: '+err.message+(String(err.message).indexOf('Permission')>=0?' · Permite el micrófono.':'');}
+  this.disabled=false;
+};
+function cleanup(){live=false;clearInterval(tmr);speaking(false);$('stage').classList.remove('live');setState('Listo');
+  try{dc&&dc.close();}catch(e){}try{pc&&pc.close();}catch(e){}if(stream)stream.getTracks().forEach(function(t){t.stop();});pc=dc=stream=null;
+  $('start').classList.remove('hid');$('stop').classList.add('hid');}
+$('stop').onclick=function(){var dur=Math.round((Date.now()-t0)/1000);cleanup();evaluate(dur);};
+
+var SCHEMA={type:'object',additionalProperties:false,required:['fases','cumplimiento','total','frase_fuerte','frase_debil','recomendaciones','resumen'],properties:{
+  fases:{type:'array',items:{type:'object',additionalProperties:false,required:['fase','puntos','comentario'],properties:{fase:{type:'string',enum:['Apertura','Sondeo','Presentación','Objeciones','Cierre']},puntos:{type:'integer',minimum:0,maximum:3},comentario:{type:'string'}}}},
+  cumplimiento:{type:'object',additionalProperties:false,required:['ok','alertas'],properties:{ok:{type:'boolean'},alertas:{type:'array',items:{type:'string'}}}},
+  total:{type:'integer',minimum:0,maximum:15},frase_fuerte:{type:'string'},frase_debil:{type:'string'},recomendaciones:{type:'array',items:{type:'string'}},resumen:{type:'string'}}};
+var RUBRIC='Eres un coach de fuerza de ventas farmacéutica en México. Evalúas la transcripción de una visita simulada entre un REPRESENTANTE y un médico difícil (Dr. G). Evalúa SOLO al representante.\n\nCalifica de 0 a 3 cada fase (0 = no ocurrió, 1 = débil, 2 = correcta, 3 = excelente):\n1. Apertura: saludo breve, motivo claro de la visita, pide o respeta el tiempo del médico.\n2. Sondeo: hace preguntas sobre los pacientes y la práctica del médico ANTES de presentar.\n3. Presentación: mensaje clave claro, beneficio ligado a lo que dijo el médico, datos con fuente.\n4. Objeciones: escucha, aclara la objeción, responde con evidencia, no discute ni se pone a la defensiva.\n5. Cierre: pide un compromiso concreto (probarlo con pacientes, siguiente visita).\n\nCumplimiento (alerta roja si falla): sin usos fuera de indicación, sin promesas de resultados, sin descalificar a la competencia, sin datos inventados. Si no hay problema, ok=true y alertas vacías.\n\ntotal = suma de las 5 fases. frase_fuerte y frase_debil: cita textual (o casi) del representante. recomendaciones: exactamente 2, concretas y accionables para su siguiente visita. resumen: una frase. Responde en español.';
+async function evaluate(dur){
+  var reps=transcript.filter(function(x){return x.role==='rep';});
+  var ev=$('ev');ev.classList.remove('hid');
+  if(reps.length<2){ev.innerHTML='<h2>Evaluación</h2><p style="color:var(--s)">La visita fue demasiado corta para evaluarla. Intenta una visita de al menos un minuto.</p>';return;}
+  ev.innerHTML='<h2>Evaluación</h2><p style="color:var(--s)">El coach está revisando tu visita…</p>';
+  var txt=transcript.map(function(x){return (x.role==='rep'?'REPRESENTANTE':'DR. G')+': '+x.text;}).join('\n');
+  try{
+    var r=await fetch('https://api.openai.com/v1/chat/completions',{method:'POST',headers:{'Authorization':'Bearer '+LS.get('drg-key',''),'Content-Type':'application/json'},
+      body:JSON.stringify({model:'gpt-4.1',temperature:0.2,messages:[{role:'system',content:RUBRIC},{role:'user',content:'Producto presentado: '+$('prod').value+'\nTipo de médico: '+TYPES[type]+'\n\nTranscripción:\n'+txt}],
+      response_format:{type:'json_schema',json_schema:{name:'evaluacion',strict:true,schema:SCHEMA}}})});
+    if(!r.ok){var m='';try{m=(await r.json()).error.message;}catch(x){}throw new Error(m||r.status);}
+    var j=await r.json();var E=JSON.parse(j.choices[0].message.content);
+    renderEval(E);saveHist(E,dur,txt);
+  }catch(err){ev.innerHTML='<h2>Evaluación</h2><p style="color:var(--y)">No se pudo evaluar: '+err.message+'</p>';}
+}
+function esc(s){return String(s||'').replace(/[&<>"]/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c];});}
+function renderEval(E){var h='<h2>Evaluación de la estructura</h2><div class="tot"><b>'+E.total+'</b><span>de 15 · '+esc(E.resumen)+'</span></div>';
+  E.fases.forEach(function(f){h+='<div class="ph"><b>'+esc(f.fase)+'</b><div class="bar"><i style="width:'+(f.puntos/3*100)+'%"></i></div><em>'+f.puntos+'/3</em><p>'+esc(f.comentario)+'</p></div>';});
+  h+=E.cumplimiento.ok?'<div class="alert ok">Cumplimiento: sin alertas.</div>':'<div class="alert bad">Alerta de cumplimiento: '+E.cumplimiento.alertas.map(esc).join(' · ')+'</div>';
+  h+='<div class="q"><small>Lo más fuerte</small>“'+esc(E.frase_fuerte)+'”</div><div class="q w"><small>Lo más débil</small>“'+esc(E.frase_debil)+'”</div>';
+  h+='<h2 style="margin-top:20px">Para tu siguiente visita</h2><ol class="rec">'+E.recomendaciones.map(function(x){return '<li>'+esc(x)+'</li>';}).join('')+'</ol>';
+  $('ev').innerHTML=h;$('ev').scrollIntoView({behavior:'smooth'});}
+function hist(){try{return JSON.parse(LS.get('drg-hist','[]'));}catch(e){return [];}}
+function saveHist(E,dur,txt){var H=hist();H.unshift({fecha:new Date().toISOString(),rep:$('rep').value||'Sin nombre',producto:$('prod').value,medico:TYPES[type],duracion:dur,total:E.total,fases:E.fases.map(function(f){return f.puntos;}),cumplimiento:E.cumplimiento.ok,resumen:E.resumen,recomendaciones:E.recomendaciones,transcripcion:txt});LS.set('drg-hist',JSON.stringify(H.slice(0,200)));}
+function renderHist(){var H=hist();if(!H.length){$('hist').innerHTML='<p style="color:var(--s)">Todavía no hay visitas evaluadas en este navegador.</p>';return;}
+  var h='<table><tr><th>Fecha</th><th>Representante</th><th>Médico</th><th>Producto</th><th>Total</th><th>Ap · So · Pr · Ob · Ci</th><th>Cumpl.</th></tr>';
+  H.forEach(function(x){h+='<tr><td>'+new Date(x.fecha).toLocaleString('es-MX',{dateStyle:'short',timeStyle:'short'})+'</td><td>'+esc(x.rep)+'</td><td>'+esc(x.medico)+'</td><td>'+esc(x.producto)+'</td><td><b>'+x.total+'</b>/15</td><td>'+x.fases.join(' · ')+'</td><td>'+(x.cumplimiento?'✓':'⚠︎')+'</td></tr>';});
+  $('hist').innerHTML=h+'</table>';}
+$('csv').onclick=function(){var H=hist();var rows=[['fecha','representante','medico','producto','duracion_s','total','apertura','sondeo','presentacion','objeciones','cierre','cumplimiento','resumen','recomendaciones']];
+  H.forEach(function(x){rows.push([x.fecha,x.rep,x.medico,x.producto,x.duracion,x.total].concat(x.fases).concat([x.cumplimiento?'ok':'alerta',x.resumen,x.recomendaciones.join(' | ')]));});
+  var csv=rows.map(function(r){return r.map(function(c){return '"'+String(c).replace(/"/g,'""')+'"';}).join(',');}).join('\n');
+  var a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv'}));a.download='dr-g-historial.csv';a.click();};
+$('clr').onclick=function(){if(confirm('¿Borrar todo el historial de este navegador?')){LS.set('drg-hist','[]');renderHist();}};
+})();
+</script></body></html>
