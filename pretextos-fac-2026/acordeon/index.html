@@ -52,6 +52,7 @@ button small{display:block;font-size:11px;color:#6f8188;font-weight:700;margin-t
 <div class="scr"><button id="sprev">◀<small>pantalla</small></button><button id="snext">Avanzar ▶<small>pantalla principal</small></button></div>
 <div class="row"><button id="b10">−10<small>seg</small></button><button id="pp">▶︎</button><button id="f10">+10<small>seg</small></button></div>
 <div class="row"><button id="prev">⏮<small>anterior</small></button><button id="rep">↺<small>repetir</small></button><button id="nxt">⏭<small>siguiente</small></button></div>
+<script src="../mqtt.min.js"></script><script src="../relay.js"></script>
 <script>
 (function(){
 var A=new Audio();A.preload='auto';A.playsInline=true;
@@ -74,7 +75,7 @@ A.addEventListener('play',function(){$('pp').textContent='❚❚';$('pp').classL
 A.addEventListener('pause',function(){$('pp').textContent='▶︎';$('pp').classList.remove('playing');});
 function segAt(t){for(var i=segs.length-1;i>=0;i--)if(t>=segs[i].start-0.01)return i;return 0;}
 function seek(d){var t=Math.max(0,Math.min((dur||A.duration||0),A.currentTime+d));cur=segAt(t);A.currentTime=t;stopAt=segs[cur]?segs[cur].end:null;if(A.paused)A.play().catch(function(){});show();}
-var lastTap=0;function scr(k,btn){var n=Date.now();if(n-lastTap<350)return;lastTap=n;if(!SALA){$('conn').innerHTML='<span class="dot"></span>Sin sala · escanea el QR (tecla C)';return;}fetch('https://ntfy.sh/polar-pretextos-'+SALA,{method:'POST',body:JSON.stringify({t:'cmd',k:k,id:Math.random().toString(36).slice(2)})}).catch(function(){});btn.classList.add('sent');setTimeout(function(){btn.classList.remove('sent');},250);}
+var lastTap=0;function scr(k,btn){var n=Date.now();if(n-lastTap<350)return;lastTap=n;if(!SALA){$('conn').innerHTML='<span class="dot"></span>Sin sala · escanea el QR (tecla C)';return;}if(RL)RL.send({t:'cmd',k:k,id:Math.random().toString(36).slice(2)});btn.classList.add('sent');setTimeout(function(){btn.classList.remove('sent');},250);}
 $('snext').onclick=function(){scr('next',this);};$('sprev').onclick=function(){scr('prev',this);};
 $('zone').onclick=function(){play(cur+1);};
 $('nxt').onclick=function(){play(cur+1);};
@@ -87,15 +88,20 @@ function onState(st){if(!auto)return;if(st.slide===last.slide&&st.step===last.st
   var i=-1;for(var k=0;k<segs.length;k++){if(segs[k].slide===st.slide&&segs[k].step===st.step){i=k;break;}}
   if(i<0&&slideChanged){for(k=0;k<segs.length;k++){if(segs[k].slide===st.slide){i=k;break;}}}
   if(i>=0&&i!==cur)play(i);}
-var SALA=(location.search.match(/sala=([a-z0-9]+)/i)||[])[1]||'';var gotDeck=false;
+var SALA=(location.search.match(/sala=([a-z0-9]+)/i)||[])[1]||'';var gotDeck=false,RL=null;
+function connTxt(){if(!RL)return;var ch=RL.mq?'directo':(RL.nt?'respaldo':'');
+  if(gotDeck)$('conn').innerHTML='<span class="dot on"></span>Laptop conectada'+(ch?' · '+ch:'');
+  else if(RL.ok())$('conn').innerHTML='<span class="dot"></span>En línea · esperando la laptop';
+  else $('conn').innerHTML='<span class="dot"></span>Conectando…';}
+function hello(){if(RL)RL.send({t:'phone',hello:true});}
 function connect(){if(!SALA){$('conn').innerHTML='<span class="dot"></span>Sin sala · escanea el QR de la presentación (tecla C)';return;}
-  $('sala').textContent='sala '+SALA;$('sala').style.color='#7d8f96';var T='https://ntfy.sh/polar-pretextos-'+SALA;
-  try{var es=new EventSource(T+'/sse');
-  es.onopen=function(){$('conn').innerHTML='<span class="dot'+(gotDeck?' on':'')+'"></span>'+(gotDeck?'Laptop conectada':'En línea · esperando la laptop');fetch(T,{method:'POST',body:JSON.stringify({t:'phone',hello:true})}).catch(function(){});};
-  es.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.event&&d.event!=='message')return;var m=JSON.parse(d.message);if(m.t!=='deck')return;if(!gotDeck){gotDeck=true;$('conn').innerHTML='<span class="dot on"></span>Laptop conectada';}PV.deck=true;pvShow(m.slide);onState({slide:m.slide,step:m.step||0});}catch(x){}};
-  es.onerror=function(){$('conn').innerHTML='<span class="dot"></span>Sin señal · usa los botones';};}catch(x){}
-  setInterval(function(){fetch(T,{method:'POST',body:JSON.stringify({t:'phone'})}).catch(function(){});},120000);
-  var tries=0,hi=setInterval(function(){if(gotDeck||tries>40){clearInterval(hi);return;}tries++;fetch(T,{method:'POST',body:JSON.stringify({t:'phone',hello:true})}).then(function(r){if(r.status===429)$('conn').innerHTML='<span class="dot"></span>Canal saturado · espera un minuto';}).catch(function(){});},6000);}
+  $('sala').textContent='sala '+SALA;$('sala').style.color='#7d8f96';
+  if(!window.Relay){$('conn').innerHTML='<span class="dot"></span>Sin señal · usa los botones';return;}
+  var wasMq=false,wasNt=false;
+  RL=Relay(SALA,function(m){if(m.t!=='deck')return;if(!gotDeck){gotDeck=true;}connTxt();PV.deck=true;pvShow(m.slide);onState({slide:m.slide,step:m.step||0});},
+    function(r){if(r.mq&&!wasMq)hello();if(r.nt&&!wasNt&&!r.mq)hello();wasMq=r.mq;wasNt=r.nt;connTxt();});
+  connTxt();
+  var tries=0,hi=setInterval(function(){if(gotDeck||tries>40){clearInterval(hi);return;}tries++;hello();},6000);}
 function wake(){if('wakeLock' in navigator){navigator.wakeLock.request('screen').then(function(l){wl=l;}).catch(function(){});}}
 connect();
 document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible')wake();});
@@ -111,6 +117,6 @@ $('load').onclick=function(){var b=this;b.disabled=true;b.textContent='Cargando�
     return pump();}).then(function(blob){audioBlob=blob;return loadThumbs();}).then(function(){var blob=audioBlob;$('pct').textContent='100%';$('gp').textContent='Listo. Conecta tus Ray-Ban, sube el volumen y toca Activar.';b.style.display='none';$('go').style.display='block';})
   .catch(function(){b.disabled=false;b.textContent='Reintentar';$('msg').textContent='No se pudo descargar. Revisa la señal del iPhone.';});};
 $('go').onclick=function(){A.src=URL.createObjectURL(audioBlob);dur=marksData.duration||0;build(marksData.marks);
-  A.play().then(function(){A.pause();A.currentTime=0;}).catch(function(){});wake();show();$('gate').style.display='none';last={slide:-1,step:-1};if(SALA)fetch('https://ntfy.sh/polar-pretextos-'+SALA,{method:'POST',body:JSON.stringify({t:'phone',hello:true})}).catch(function(){});};
+  A.play().then(function(){A.pause();A.currentTime=0;}).catch(function(){});wake();show();$('gate').style.display='none';last={slide:-1,step:-1};hello();};
 })();
 </script></body></html>

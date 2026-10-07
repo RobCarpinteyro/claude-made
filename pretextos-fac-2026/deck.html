@@ -455,6 +455,7 @@ body.phone-on #num::after{content:" · iPhone";color:#3ce3c3}
 .covt h1{font-family:'RHD',sans-serif;font-weight:900;font-size:66px;line-height:1.04;letter-spacing:-.01em;color:#fff;margin:0;text-shadow:0 4px 30px rgba(1,21,80,.55)}
 .covt .by{font-family:'RHD',sans-serif;font-weight:700;font-size:26px;color:#CFE6F2;margin-top:20px}
 </style>
+<script src="mqtt.min.js"></script><script src="relay.js"></script>
 </head>
 <body>
 
@@ -3527,13 +3528,17 @@ hb.addEventListener('click',function(e){e.stopPropagation();if(hb.classList.cont
   hb.classList.add('armed');hb.textContent='¿Ir al inicio?';ht=setTimeout(function(){hb.classList.remove('armed');hb.textContent='⌂';},3000);hb.blur();});
 /* ---------- puente con el acordeón del iPhone (solo si corre desde el servidor local) ---------- */
 var LOCAL=location.port==='8765',LIVE=LOCAL,bt=null;
-var SALA=null,ONLINE=!LOCAL&&location.protocol.indexOf('http')===0,lastSent=-1,es=null,lastCmd='';
+var SALA=null,ONLINE=!LOCAL&&location.protocol.indexOf('http')===0,lastSent=-1,lastCmd='';
 function remoteKey(k){var key=k==='prev'?'ArrowLeft':'ArrowRight';dispatchEvent(new KeyboardEvent('keydown',{key:key}));}
 if(LOCAL){try{var ces=new EventSource('/cmd-events');ces.onmessage=function(e){try{var d=JSON.parse(e.data);if(d.k)remoteKey(d.k);}catch(x){}};}catch(x){}}
 try{SALA=localStorage.getItem('pretextos-sala');}catch(e){}
 function topic(){return 'polar-pretextos-'+SALA;}
-function listen(){if(!SALA||es)return;try{es=new EventSource('https://ntfy.sh/'+topic()+'/sse');es.onmessage=function(e){try{var m=JSON.parse(JSON.parse(e.data).message);if(m.t==='phone'){document.body.classList.add('phone-on');var cs=document.getElementById('cstat');if(cs){cs.textContent='Teléfono conectado ✓';cs.style.color='#3ddc84';}if(m.hello)lastSent=-1,send(true);}else if(m.t==='cmd'&&m.id!==lastCmd){lastCmd=m.id;remoteKey(m.k);}}catch(x){}};}catch(x){}}
-function send(force){if(!SALA)return;if(!force&&cur===lastSent)return;lastSent=cur;fetch('https://ntfy.sh/'+topic(),{method:'POST',body:JSON.stringify({t:'deck',slide:cur,step:0})}).catch(function(){});}
+var RL=null;
+function phoneOn(){document.body.classList.add('phone-on');var cs=document.getElementById('cstat');if(cs){cs.textContent='Teléfono conectado ✓';cs.style.color='#3ddc84';}}
+function listen(){if(!SALA||RL||!window.Relay)return;var wasMq=false;
+  RL=Relay(SALA,function(m){if(m.t==='phone'){phoneOn();if(m.hello){lastSent=-1;send(true);}}else if(m.t==='cmd'&&m.id!==lastCmd){lastCmd=m.id;remoteKey(m.k);}},
+    function(r){if(r.mq&&!wasMq){wasMq=true;lastSent=-1;send(true);}if(!r.mq)wasMq=false;});}
+function send(force){if(!SALA||!RL)return;if(!force&&cur===lastSent)return;lastSent=cur;RL.send({t:'deck',slide:cur,step:0});}
 function bridge(){if(LOCAL){clearTimeout(bt);bt=setTimeout(function(){fetch('/state',{method:'POST',body:JSON.stringify({slide:cur,step:step})}).then(function(r){return r.json();}).then(function(d){document.body.classList.toggle('phone-on',d.phones>0);}).catch(function(){document.body.classList.remove('phone-on');});},60);return;}
   if(ONLINE&&SALA){clearTimeout(bt);bt=setTimeout(function(){send(false);},250);}}
 if(ONLINE&&SALA)setTimeout(listen,500);
