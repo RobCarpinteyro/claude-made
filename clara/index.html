@@ -7,10 +7,11 @@
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:#fff;font-family:Manrope,system-ui,sans-serif}
 body{background:radial-gradient(1000px 600px at 80% 0%,rgba(81,196,202,.12),transparent 60%),var(--bg)}
 header{display:flex;align-items:center;gap:18px;padding:16px 28px;border-bottom:1px solid var(--line)}
-header img{height:34px}header .t{font-weight:800;font-size:17px}header .t small{display:block;font-weight:600;font-size:13px;color:var(--d)}
+header img{height:64px}header .t{font-weight:800;font-size:17px}header .t small{display:block;font-weight:600;font-size:13px;color:var(--d)}
 header .sp{flex:1}
 main{display:grid;grid-template-columns:minmax(300px,430px) 1fr;gap:28px;padding:24px 28px;max-width:1440px;margin:0 auto}
 @media(max-width:900px){main{grid-template-columns:1fr}}
+@media(max-width:560px){header img{height:44px}header{padding:14px 16px}}
 .stage{position:relative;border-radius:24px;overflow:hidden;aspect-ratio:576/1008;background:#0b1a24;border:2px solid var(--line);transition:border-color .3s,box-shadow .3s;max-height:calc(100vh - 120px);margin:0 auto}
 .stage video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transition:opacity .35s}
 .stage #vS{opacity:0}.stage.speaking #vS{opacity:1}
@@ -60,7 +61,7 @@ main{display:grid;grid-template-columns:minmax(300px,430px) 1fr;gap:28px;padding
     <div id="feed"></div>
   </div>
 </main>
-<div class="foot">Demo · Polar Multimedia · 20 estudios aprobados de Bacmune (MV130)</div>
+<div class="foot">20 estudios aprobados de Bacmune (MV130)</div>
 <script src="config.js"></script>
 <script>
 (function(){
