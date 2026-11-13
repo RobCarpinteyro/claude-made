@@ -91,7 +91,7 @@ async function onEvent(e){var d;try{d=JSON.parse(e.data);}catch(x){return;}var t
   else if(t==='output_audio_buffer.stopped'||t==='output_audio_buffer.cleared'){speaking(false);setState(muted?'Micrófono apagado':'Escuchando');}
   else if(t==='response.function_call_arguments.done'&&d.name==='search_corpus'){
     var args={};try{args=JSON.parse(d.arguments||'{}');}catch(x){}var q=args.query||lastUser;setState('Buscando en los estudios…','thinking');
-    var res;try{var r=await fetch(API+'/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q})});res=await r.json();if(!r.ok)throw new Error((res.error&&res.error.message)||r.status);}
+    var res;try{var r=await fetch(API+'/search',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query:q,demo:true})});res=await r.json();if(!r.ok)throw new Error((res.error&&res.error.message)||r.status);}
     catch(err){res={evidence:false,answer:'',results:[],error:String(err.message||err)};$('msg').textContent='Búsqueda: '+res.error;}
     card(lastUser||q,res);
     send({type:'conversation.item.create',item:{type:'function_call_output',call_id:d.call_id,output:JSON.stringify(res.evidence?{evidencia:res.answer,estudios:(res.results||[]).map(function(x){return prettyName(x.filename);})}:{evidencia:null,nota:'Sin evidencia en el corpus aprobado.'})}});
@@ -103,7 +103,7 @@ $('start').onclick=async function(){
   this.disabled=true;$('msg').textContent='';setState('Conectando…');
   try{
     stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true}});
-    var r=await fetch(API+'/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agent:'clara',instructions:PROMPT})});
+    var r=await fetch(API+'/session',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({agent:'clara',instructions:PROMPT,demo:true})});
     var j=await r.json();if(!r.ok)throw new Error((j.error&&j.error.message)||('servidor '+r.status));
     var ek=j.value||(j.client_secret&&j.client_secret.value);
     pc=new RTCPeerConnection();audioEl=new Audio();audioEl.autoplay=true;pc.ontrack=function(ev){audioEl.srcObject=ev.streams[0];};
@@ -113,11 +113,12 @@ $('start').onclick=async function(){
     var ans=await fetch('https://api.openai.com/v1/realtime/calls?model=gpt-realtime',{method:'POST',body:offer.sdp,headers:{'Authorization':'Bearer '+ek,'Content-Type':'application/sdp'}});
     if(!ans.ok)throw new Error('No se pudo abrir la llamada ('+ans.status+')');
     await pc.setRemoteDescription({type:'answer',sdp:await ans.text()});
-    live=true;$('stage').classList.add('live');setState('Escuchando');$('start').style.display='none';$('stop').style.display='inline-block';$('mute').style.display='inline-block';setMute(false);
+    live=true;clearTimeout(demoT);demoT=setTimeout(function(){stop();$('msg').textContent='La demo termina a los 5 minutos. Puedes volver a iniciarla.';},300000);$('stage').classList.add('live');setState('Escuchando');$('start').style.display='none';$('stop').style.display='inline-block';$('mute').style.display='inline-block';setMute(false);
   }catch(err){stop();$('msg').textContent='No se pudo iniciar: '+err.message;}
   this.disabled=false;
 };
-function stop(){live=false;speaking(false);$('stage').classList.remove('live','thinking');setState('Lista');
+var demoT=null;
+function stop(){clearTimeout(demoT);live=false;speaking(false);$('stage').classList.remove('live','thinking');setState('Lista');
   try{dc&&dc.close();}catch(e){}try{pc&&pc.close();}catch(e){}if(stream)stream.getTracks().forEach(function(t){t.stop();});pc=dc=stream=null;
   $('start').style.display='inline-block';$('stop').style.display='none';$('mute').style.display='none';}
 $('stop').onclick=stop;
